@@ -1,22 +1,22 @@
 ---
-name: spotify-cli
-description: Control Spotify from the terminal using spotify_cli.py — play, pause, search, queue, playlists, and more
+name: spopy
+description: Control Spotify from the terminal using spopy — play, pause, search, queue, playlists, and more
 globs:
   - "spotify_cli.py"
 ---
 
-# Spotify CLI
+# spopy
 
-`spotify_cli.py` is a single-file Spotify CLI. Run commands with `./spotify_cli.py` or `uv run spotify_cli.py`.
+`spopy` is a single-file Spotify CLI. Run commands with `spopy` or `./spotify_cli.py`.
 
 ## Always use --json
 
 Use `--json` for all commands to get machine-readable output:
 
 ```bash
-./spotify_cli.py --json status
-./spotify_cli.py auth --json status
-./spotify_cli.py --json search "bohemian rhapsody"
+spopy --json status
+spopy auth --json status
+spopy --json search "bohemian rhapsody"
 ```
 
 JSON output shape: `{"ok": true, "command": "...", "data": {...}}`
@@ -28,35 +28,35 @@ For grouped commands (`auth`, `playlist`, `track`, etc.), `--json` goes after th
 
 ```bash
 # Playback
-./spotify_cli.py --json status              # what's playing
-./spotify_cli.py play "song name"           # search and play
-./spotify_cli.py play spotify:track:ID      # play by URI
-./spotify_cli.py pause
-./spotify_cli.py next
-./spotify_cli.py seek 1:30                  # or +10s, -15s, 90000
+spopy --json status              # what's playing
+spopy play "song name"           # search and play
+spopy play spotify:track:ID      # play by URI
+spopy pause
+spopy next
+spopy seek 1:30                  # or +10s, -15s, 90000
 
 # Search
-./spotify_cli.py --json search "query" --type track
-./spotify_cli.py --json search "query" --type album,artist
+spopy --json search "query" --type track
+spopy --json search "query" --type album,artist
 
 # Queue
-./spotify_cli.py queue --json list
-./spotify_cli.py queue add "song name"
+spopy queue --json list
+spopy queue add "song name"
 
 # Playlists
-./spotify_cli.py playlist --json list
-./spotify_cli.py playlist create "Name"
-./spotify_cli.py playlist add "Name" "song1" "song2"
-./spotify_cli.py playlist remove "Name" "song1"
-./spotify_cli.py playlist clear "Name" --yes
+spopy playlist --json list
+spopy playlist create "Name"
+spopy playlist add "Name" "song1" "song2"
+spopy playlist remove "Name" "song1"
+spopy playlist clear "Name" --yes
 
 # Library
-./spotify_cli.py track save "song name"
-./spotify_cli.py library --json tracks
+spopy track save "song name"
+spopy library --json tracks
 
 # Devices
-./spotify_cli.py devices --json list
-./spotify_cli.py devices transfer "Device Name"
+spopy devices --json list
+spopy devices transfer "Device Name"
 ```
 
 ## Auth
@@ -64,9 +64,9 @@ For grouped commands (`auth`, `playlist`, `track`, etc.), `--json` goes after th
 If commands fail with exit code 3, auth needs setup:
 
 ```bash
-./spotify_cli.py auth setup-guide   # full instructions
-./spotify_cli.py auth status        # check current state
-./spotify_cli.py doctor             # diagnose all issues
+spopy auth setup-guide   # full instructions
+spopy auth status        # check current state
+spopy doctor             # diagnose all issues
 ```
 
 Required env vars: `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, `SPOTIPY_REDIRECT_URI`.

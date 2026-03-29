@@ -14,7 +14,7 @@ Supports local and gateway (headless) authentication bootstrap, persistent
 token caching, rich/plain/JSON output, and a comprehensive set of Spotify
 operations with honest handling of unsupported endpoints.
 
-See: spotify_cli.py --help
+See: spopy --help
 """
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ from spotipy.oauth2 import SpotifyOAuth
 # Constants
 # ---------------------------------------------------------------------------
 
-APP_NAME = "spotify-cli"
+APP_NAME = "spopy"
 __version__ = "0.1.0"
 
 DEFAULT_SCOPES = " ".join([
@@ -67,7 +67,7 @@ DEFAULT_SCOPES = " ".join([
     "user-read-private",
 ])
 
-DEFAULT_CACHE_PATH = ".spotify_cli_cache"
+DEFAULT_CACHE_PATH = ".spopy_cache"
 DEFAULT_MARKET = ""
 DEFAULT_TIMEOUT = 15
 DEFAULT_RETRIES = 3
@@ -652,8 +652,8 @@ def _confirm(message: str) -> bool:
 # ---------------------------------------------------------------------------
 
 app = typer.Typer(
-    name="spotify-cli",
-    help="Production-quality Spotify CLI. Supports local and gateway auth bootstrap.",
+    name="spopy",
+    help="spopy — a production-quality Spotify CLI. Supports local and gateway auth bootstrap.",
     no_args_is_help=True,
     rich_markup_mode="rich",
     # Note: allow_interspersed_args is left as default (False) so that
@@ -838,7 +838,7 @@ def _mood_cb(
 
 def _version_callback(value: bool) -> None:
     if value:
-        print(f"spotify-cli {__version__}")
+        print(f"spopy {__version__}")
         raise typer.Exit()
 
 
@@ -914,26 +914,26 @@ def auth_setup_guide() -> None:
 [bold]Step 3: Authenticate[/]
 
   [bold]Option A — Local machine with a browser:[/]
-    [green]spotify_cli.py auth login[/]
+    [green]spopy auth login[/]
 
   [bold]Option B — Remote gateway (no browser):[/]
-    [green]spotify_cli.py auth url[/]
+    [green]spopy auth url[/]
     Open the printed URL in a browser on another machine.
     After approving, the browser shows an error page — this is expected.
     Copy the full URL from the address bar, then:
-    [green]spotify_cli.py auth callback-url '<paste_the_full_url>'[/]
+    [green]spopy auth callback-url '<paste_the_full_url>'[/]
 
   [bold]Option C — Transfer token from local to gateway:[/]
-    On local:  [green]spotify_cli.py auth login[/]
-    On local:  [green]spotify_cli.py auth export-token-info --raw --yes > token.json[/]
+    On local:  [green]spopy auth login[/]
+    On local:  [green]spopy auth export-token-info --raw --yes > token.json[/]
     Copy token.json to the gateway, then:
-    On gateway: [green]spotify_cli.py auth import-token-info token.json[/]
+    On gateway: [green]spopy auth import-token-info token.json[/]
 
 [bold]Step 4: Verify[/]
 
-  [green]spotify_cli.py auth status[/]
-  [green]spotify_cli.py doctor[/]
-  [green]spotify_cli.py devices list[/]
+  [green]spopy auth status[/]
+  [green]spopy doctor[/]
+  [green]spopy devices list[/]
 
 [dim]Important: The redirect URI in your Spotify app settings MUST exactly match
 SPOTIPY_REDIRECT_URI. Use http://127.0.0.1 (not localhost).[/]"""
@@ -1044,7 +1044,7 @@ def auth_url(
         _out.print("  4. Copy the [bold]entire URL[/] from the address bar (it starts with")
         _out.print(f"     [dim]{_state.redirect_uri}?code=...[/])")
         _out.print("  5. Run:")
-        _out.print("     [green]spotify_cli.py auth callback-url '<paste_the_full_url>'[/]")
+        _out.print("     [green]spopy auth callback-url '<paste_the_full_url>'[/]")
 
 
 @auth_app.command("login")
@@ -1072,8 +1072,8 @@ def auth_login(
         _out.print('After approving (or if already approved), your browser will show an [yellow]"Unable to')
         _out.print('connect"[/] error page. [bold]This is expected.[/]')
         _out.print("Copy the [bold]entire URL[/] from the address bar, then run one of:")
-        _out.print("  [green]spotify_cli.py auth callback-url '<paste_the_full_url>'[/]")
-        _out.print("  [green]spotify_cli.py auth code '<just_the_code_param>'[/]")
+        _out.print("  [green]spopy auth callback-url '<paste_the_full_url>'[/]")
+        _out.print("  [green]spopy auth code '<just_the_code_param>'[/]")
         return
 
     _out.print("\nAfter authorizing, your browser will show an error page — [bold]this is expected.[/]")
@@ -2936,47 +2936,47 @@ if __name__ == "__main__":
 # ---------------------------------------------------------------------------
 # Run these manually after setup:
 #
-#   uv run spotify_cli.py --help
-#   uv run spotify_cli.py auth --help
-#   uv run spotify_cli.py auth status
-#   uv run spotify_cli.py auth url
-#   uv run spotify_cli.py auth login --no-open-browser
-#   uv run spotify_cli.py auth callback-url 'http://127.0.0.1:8888/callback?code=XXXXX&state=YYYYY'
-#   uv run spotify_cli.py auth export-token-info --masked
-#   uv run spotify_cli.py auth export-token-info --raw --yes > token.json
-#   uv run spotify_cli.py auth import-token-info token.json
-#   uv run spotify_cli.py auth whoami
-#   uv run spotify_cli.py doctor
-#   uv run spotify_cli.py devices list
-#   uv run spotify_cli.py search "bohemian rhapsody" --type track
-#   uv run spotify_cli.py status
-#   uv run spotify_cli.py current
-#   uv run spotify_cli.py play "bohemian rhapsody"
-#   uv run spotify_cli.py pause
-#   uv run spotify_cli.py next
-#   uv run spotify_cli.py previous
-#   uv run spotify_cli.py seek 1:30
-#   uv run spotify_cli.py volume 50
-#   uv run spotify_cli.py shuffle toggle
-#   uv run spotify_cli.py repeat track
-#   uv run spotify_cli.py queue list
-#   uv run spotify_cli.py queue add "hotel california"
-#   uv run spotify_cli.py track show "stairway to heaven"
-#   uv run spotify_cli.py album show "dark side of the moon"
-#   uv run spotify_cli.py artist top "pink floyd"
-#   uv run spotify_cli.py artist albums "pink floyd"
-#   uv run spotify_cli.py playlist list
-#   uv run spotify_cli.py playlist create "My Test Playlist"
-#   uv run spotify_cli.py playlist add "My Test Playlist" "bohemian rhapsody" "hotel california"
-#   uv run spotify_cli.py playlist items "My Test Playlist"
-#   uv run spotify_cli.py playlist remove "My Test Playlist" "bohemian rhapsody"
-#   uv run spotify_cli.py playlist clear "My Test Playlist" --yes
-#   uv run spotify_cli.py library tracks
-#   uv run spotify_cli.py recent
-#   uv run spotify_cli.py top tracks
-#   uv run spotify_cli.py top artists
-#   uv run spotify_cli.py genre list
-#   uv run spotify_cli.py mood search chill
-#   uv run spotify_cli.py discover
-#   uv run spotify_cli.py radio "pink floyd"
-#   uv run spotify_cli.py auth logout --yes
+#   uv run spopy --help
+#   uv run spopy auth --help
+#   uv run spopy auth status
+#   uv run spopy auth url
+#   uv run spopy auth login --no-open-browser
+#   uv run spopy auth callback-url 'http://127.0.0.1:8888/callback?code=XXXXX&state=YYYYY'
+#   uv run spopy auth export-token-info --masked
+#   uv run spopy auth export-token-info --raw --yes > token.json
+#   uv run spopy auth import-token-info token.json
+#   uv run spopy auth whoami
+#   uv run spopy doctor
+#   uv run spopy devices list
+#   uv run spopy search "bohemian rhapsody" --type track
+#   uv run spopy status
+#   uv run spopy current
+#   uv run spopy play "bohemian rhapsody"
+#   uv run spopy pause
+#   uv run spopy next
+#   uv run spopy previous
+#   uv run spopy seek 1:30
+#   uv run spopy volume 50
+#   uv run spopy shuffle toggle
+#   uv run spopy repeat track
+#   uv run spopy queue list
+#   uv run spopy queue add "hotel california"
+#   uv run spopy track show "stairway to heaven"
+#   uv run spopy album show "dark side of the moon"
+#   uv run spopy artist top "pink floyd"
+#   uv run spopy artist albums "pink floyd"
+#   uv run spopy playlist list
+#   uv run spopy playlist create "My Test Playlist"
+#   uv run spopy playlist add "My Test Playlist" "bohemian rhapsody" "hotel california"
+#   uv run spopy playlist items "My Test Playlist"
+#   uv run spopy playlist remove "My Test Playlist" "bohemian rhapsody"
+#   uv run spopy playlist clear "My Test Playlist" --yes
+#   uv run spopy library tracks
+#   uv run spopy recent
+#   uv run spopy top tracks
+#   uv run spopy top artists
+#   uv run spopy genre list
+#   uv run spopy mood search chill
+#   uv run spopy discover
+#   uv run spopy radio "pink floyd"
+#   uv run spopy auth logout --yes

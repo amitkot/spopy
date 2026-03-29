@@ -1,4 +1,4 @@
-# spotify-cli
+# spopy
 
 A production-quality Spotify CLI in a single Python file. Runs anywhere with [uv](https://docs.astral.sh/uv/) — no install step, no virtualenv, no package manager.
 
@@ -25,10 +25,10 @@ Designed for both local use and self-hosting on a remote gateway (Dokku, VPS, et
 ### One-liner
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/amitkot/spotify-cli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash
 ```
 
-This checks for uv (installs it if missing), downloads `spotify_cli.py` to `~/.local/bin/spotify-cli`, and prints next steps.
+This checks for uv (installs it if missing), downloads `spotify_cli.py` to `~/.local/bin/spopy`, and prints next steps.
 
 ### Manual
 
@@ -37,15 +37,15 @@ This checks for uv (installs it if missing), downloads `spotify_cli.py` to `~/.l
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Download the CLI
-curl -fsSL https://raw.githubusercontent.com/amitkot/spotify-cli/main/spotify_cli.py -o ~/.local/bin/spotify-cli
-chmod +x ~/.local/bin/spotify-cli
+curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/spotify_cli.py -o ~/.local/bin/spopy
+chmod +x ~/.local/bin/spopy
 ```
 
 Or clone the repo and run directly:
 
 ```bash
-git clone https://github.com/amitkot/spotify-cli.git
-cd spotify-cli
+git clone https://github.com/amitkot/spopy.git
+cd spopy
 ./spotify_cli.py --help
 ```
 
@@ -87,42 +87,42 @@ dokku config:set myapp SPOTIPY_CLIENT_ID='...' SPOTIPY_CLIENT_SECRET='...' SPOTI
 ### 3. Verify setup
 
 ```bash
-spotify-cli auth status
-spotify-cli doctor
+spopy auth status
+spopy doctor
 ```
 
-The CLI also has a built-in guide: `spotify-cli auth setup-guide`
+The CLI also has a built-in guide: `spopy auth setup-guide`
 
 ## Quick Start
 
 ### Local machine (has a browser)
 
 ```bash
-spotify-cli auth login
+spopy auth login
 # Browser opens → approve → copy the redirect URL → paste when prompted
-spotify-cli status
-spotify-cli play "bohemian rhapsody"
+spopy status
+spopy play "bohemian rhapsody"
 ```
 
 ### Remote gateway (no browser)
 
 ```bash
-spotify-cli auth url
+spopy auth url
 # Copy the printed URL → open in a browser on another machine
 # Approve → browser shows "Unable to connect" → copy the URL from the address bar
-spotify-cli auth callback-url 'http://127.0.0.1:8888/callback?code=XXXXX&state=YYYYY'
-spotify-cli status
+spopy auth callback-url 'http://127.0.0.1:8888/callback?code=XXXXX&state=YYYYY'
+spopy status
 ```
 
 ### Transfer token from local to remote
 
 ```bash
 # On local machine
-spotify-cli auth login
-spotify-cli auth export-token-info --raw --yes > token.json
+spopy auth login
+spopy auth export-token-info --raw --yes > token.json
 
 # Copy token.json to remote, then:
-spotify-cli auth import-token-info token.json
+spopy auth import-token-info token.json
 ```
 
 ## Configuration
@@ -141,7 +141,7 @@ All configuration is via environment variables.
 
 | Variable | Default | Description |
 |---|---|---|
-| `SPOTIPY_CACHE_PATH` | `.spotify_cli_cache` | Token cache file path |
+| `SPOTIPY_CACHE_PATH` | `.spopy_cache` | Token cache file path |
 | `SPOTIPY_USERNAME` | | Spotify username (for multi-user) |
 | `SPOTIFY_CLI_SCOPES` | (sensible defaults) | Override OAuth scopes |
 | `SPOTIFY_CLI_DEFAULT_DEVICE_ID` | | Fallback device ID |
@@ -313,7 +313,7 @@ All configuration is via environment variables.
 ### Rich (default)
 
 ```
-$ spotify-cli status
+$ spopy status
 ╭─ Bohemian Rhapsody  —  Queen  (A Night at the Opera) ───╮
 │ Playing  2:15 / 5:55                                     │
 │ Device: MacBook Pro  |  Volume: 65%  |  Shuffle: off     │
@@ -323,7 +323,7 @@ $ spotify-cli status
 ### JSON
 
 ```
-$ spotify-cli --json status
+$ spopy --json status
 {
   "ok": true,
   "command": "status",
@@ -341,7 +341,7 @@ $ spotify-cli --json status
 ### Plain
 
 ```
-$ spotify-cli --plain status
+$ spopy --plain status
 Bohemian Rhapsody	Queen	A Night at the Opera	playing	2:15/5:55	MacBook Pro
 ```
 
