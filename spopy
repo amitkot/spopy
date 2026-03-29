@@ -249,26 +249,39 @@ class CLIState:
 _state = CLIState()
 
 
+def _env(primary: str, *fallbacks: str, default: str = "") -> str:
+    """Read an env var with fallback names. First match wins."""
+    for key in (primary, *fallbacks):
+        val = os.environ.get(key)
+        if val is not None:
+            return val
+    return default
+
+
 def _load_env() -> None:
-    """Populate state from environment variables."""
-    _state.client_id = os.environ.get("SPOTIPY_CLIENT_ID", "")
-    _state.client_secret = os.environ.get("SPOTIPY_CLIENT_SECRET", "")
-    _state.redirect_uri = os.environ.get("SPOTIPY_REDIRECT_URI", "")
-    _state.cache_path = os.environ.get("SPOTIPY_CACHE_PATH", DEFAULT_CACHE_PATH)
-    _state.username = os.environ.get("SPOTIPY_USERNAME", "")
-    _state.scopes = os.environ.get("SPOTIFY_CLI_SCOPES", DEFAULT_SCOPES)
-    _state.default_device_id = os.environ.get("SPOTIFY_CLI_DEFAULT_DEVICE_ID", "")
-    _state.default_device_name = os.environ.get("SPOTIFY_CLI_DEFAULT_DEVICE_NAME", "")
-    _state.market = os.environ.get("SPOTIFY_CLI_MARKET", "")
-    _state.output = os.environ.get("SPOTIFY_CLI_OUTPUT", OutputMode.RICH)
-    _state.timeout = int(os.environ.get("SPOTIFY_CLI_TIMEOUT_SECONDS", str(DEFAULT_TIMEOUT)))
-    _state.retries = int(os.environ.get("SPOTIFY_CLI_RETRIES", str(DEFAULT_RETRIES)))
-    _state.backoff_factor = float(os.environ.get("SPOTIFY_CLI_BACKOFF_FACTOR", str(DEFAULT_BACKOFF_FACTOR)))
-    _state.debug = os.environ.get("SPOTIFY_CLI_DEBUG", "0") == "1"
-    _state.open_browser = os.environ.get("SPOTIFY_CLI_OPEN_BROWSER", "1") == "1"
-    _state.no_color = os.environ.get("SPOTIFY_CLI_NO_COLOR", "0") == "1"
-    _state.token_import_json = os.environ.get("SPOTIFY_CLI_TOKEN_IMPORT_JSON", "")
-    _state.state_file = os.environ.get("SPOTIFY_CLI_STATE_FILE", "")
+    """Populate state from environment variables.
+
+    SPOTIFY_* vars are primary. SPOTIPY_* accepted as fallbacks for the
+    spotipy library's native env vars.
+    """
+    _state.client_id = _env("SPOTIFY_CLIENT_ID", "SPOTIPY_CLIENT_ID")
+    _state.client_secret = _env("SPOTIFY_CLIENT_SECRET", "SPOTIPY_CLIENT_SECRET")
+    _state.redirect_uri = _env("SPOTIFY_REDIRECT_URI", "SPOTIPY_REDIRECT_URI")
+    _state.cache_path = _env("SPOTIFY_CACHE_PATH", "SPOTIPY_CACHE_PATH", default=DEFAULT_CACHE_PATH)
+    _state.username = _env("SPOTIFY_USERNAME", "SPOTIPY_USERNAME")
+    _state.scopes = _env("SPOTIFY_SCOPES", default=DEFAULT_SCOPES)
+    _state.default_device_id = _env("SPOTIFY_DEFAULT_DEVICE_ID")
+    _state.default_device_name = _env("SPOTIFY_DEFAULT_DEVICE_NAME")
+    _state.market = _env("SPOTIFY_MARKET")
+    _state.output = _env("SPOTIFY_OUTPUT", default=OutputMode.RICH)
+    _state.timeout = int(_env("SPOTIFY_TIMEOUT_SECONDS", default=str(DEFAULT_TIMEOUT)))
+    _state.retries = int(_env("SPOTIFY_RETRIES", default=str(DEFAULT_RETRIES)))
+    _state.backoff_factor = float(_env("SPOTIFY_BACKOFF_FACTOR", default=str(DEFAULT_BACKOFF_FACTOR)))
+    _state.debug = _env("SPOTIFY_DEBUG", default="0") == "1"
+    _state.open_browser = _env("SPOTIFY_OPEN_BROWSER", default="1") == "1"
+    _state.no_color = _env("SPOTIFY_NO_COLOR", default="0") == "1"
+    _state.token_import_json = _env("SPOTIFY_TOKEN_IMPORT_JSON")
+    _state.state_file = _env("SPOTIFY_STATE_FILE")
 
 
 # ---------------------------------------------------------------------------
@@ -280,11 +293,11 @@ def _build_oauth(open_browser: bool = False) -> SpotifyOAuth:
     if not _state.auth_configured():
         missing = []
         if not _state.client_id:
-            missing.append("SPOTIPY_CLIENT_ID")
+            missing.append("SPOTIFY_CLIENT_ID")
         if not _state.client_secret:
-            missing.append("SPOTIPY_CLIENT_SECRET")
+            missing.append("SPOTIFY_CLIENT_SECRET")
         if not _state.redirect_uri:
-            missing.append("SPOTIPY_REDIRECT_URI")
+            missing.append("SPOTIFY_REDIRECT_URI")
         _die(
             f"Missing required auth env var(s): {', '.join(missing)}",
             ExitCode.AUTH_CONFIG_ERROR,
@@ -557,7 +570,7 @@ def _require_device(sp: spotipy.Spotify) -> str:
         _die(
             "No active device and no default configured.",
             ExitCode.API_ERROR,
-            hint="Open Spotify on a device, or set SPOTIFY_CLI_DEFAULT_DEVICE_ID / SPOTIFY_CLI_DEFAULT_DEVICE_NAME.",
+            hint="Open Spotify on a device, or set SPOTIFY_DEFAULT_DEVICE_ID / SPOTIFY_DEFAULT_DEVICE_NAME.",
         )
     return dev
 
@@ -904,9 +917,9 @@ def auth_setup_guide() -> None:
 
 [bold]Step 2: Set environment variables[/]
 
-  [green]export SPOTIPY_CLIENT_ID='your_client_id'[/]
-  [green]export SPOTIPY_CLIENT_SECRET='your_client_secret'[/]
-  [green]export SPOTIPY_REDIRECT_URI='http://127.0.0.1:8888/callback'[/]
+  [green]export SPOTIFY_CLIENT_ID='your_client_id'[/]
+  [green]export SPOTIFY_CLIENT_SECRET='your_client_secret'[/]
+  [green]export SPOTIFY_REDIRECT_URI='http://127.0.0.1:8888/callback'[/]
 
   Tip: Add these to your shell profile (~/.bashrc, ~/.zshrc) or use
   Dokku config:set for gateway deployment.
@@ -936,7 +949,8 @@ def auth_setup_guide() -> None:
   [green]spopy devices list[/]
 
 [dim]Important: The redirect URI in your Spotify app settings MUST exactly match
-SPOTIPY_REDIRECT_URI. Use http://127.0.0.1 (not localhost).[/]"""
+SPOTIFY_REDIRECT_URI. Use http://127.0.0.1 (not localhost).
+Also accepts SPOTIPY_* env vars for compatibility.[/]"""
     _out.print(guide)
 
 
@@ -1294,7 +1308,7 @@ def doctor() -> None:
     checks: list[tuple[str, str, str]] = []  # (label, status_icon, detail)
 
     # 1. Env vars
-    for var in ("SPOTIPY_CLIENT_ID", "SPOTIPY_CLIENT_SECRET", "SPOTIPY_REDIRECT_URI"):
+    for var in ("SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", "SPOTIFY_REDIRECT_URI"):
         val = os.environ.get(var, "")
         if val:
             checks.append((var, "[green]OK[/]", "Set"))

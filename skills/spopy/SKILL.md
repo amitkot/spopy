@@ -69,7 +69,7 @@ spopy auth status        # check current state
 spopy doctor             # diagnose all issues
 ```
 
-Required env vars: `SPOTIPY_CLIENT_ID`, `SPOTIPY_CLIENT_SECRET`, `SPOTIPY_REDIRECT_URI`.
+Required env vars: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`.
 
 ## Exit codes
 

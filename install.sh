@@ -6,7 +6,7 @@ set -euo pipefail
 
 REPO="amitkot/spopy"
 BRANCH="main"
-INSTALL_DIR="${SPOPY_INSTALL_DIR:-$HOME/.local/bin}"
+INSTALL_DIR="${SPOTIFY_INSTALL_DIR:-$HOME/.local/bin}"
 BIN_NAME="spopy"
 URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/spopy"
 
@@ -51,6 +51,6 @@ fi
 ok ""
 ok "spopy installed! Next steps:"
 info "  1. Create a Spotify app:  ${BIN_NAME} auth setup-guide"
-info "  2. Set env vars:          export SPOTIPY_CLIENT_ID='...'"
+info "  2. Set env vars:          export SPOTIFY_CLIENT_ID='...'"
 info "  3. Log in:                ${BIN_NAME} auth login"
 info "  4. Check status:          ${BIN_NAME} doctor"

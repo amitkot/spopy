@@ -71,9 +71,9 @@ Before using the CLI, you need a Spotify Developer app. This is a one-time setup
 ### 2. Set environment variables
 
 ```bash
-export SPOTIPY_CLIENT_ID='your_client_id'
-export SPOTIPY_CLIENT_SECRET='your_client_secret'
-export SPOTIPY_REDIRECT_URI='http://127.0.0.1:8888/callback'
+export SPOTIFY_CLIENT_ID='your_client_id'
+export SPOTIFY_CLIENT_SECRET='your_client_secret'
+export SPOTIFY_REDIRECT_URI='http://127.0.0.1:8888/callback'
 ```
 
 Add these to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist them.
@@ -81,7 +81,7 @@ Add these to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist them.
 For Dokku deployments:
 
 ```bash
-dokku config:set myapp SPOTIPY_CLIENT_ID='...' SPOTIPY_CLIENT_SECRET='...' SPOTIPY_REDIRECT_URI='...'
+dokku config:set myapp SPOTIFY_CLIENT_ID='...' SPOTIFY_CLIENT_SECRET='...' SPOTIFY_REDIRECT_URI='...'
 ```
 
 ### 3. Verify setup
@@ -133,28 +133,28 @@ All configuration is via environment variables.
 
 | Variable | Description |
 |---|---|
-| `SPOTIPY_CLIENT_ID` | Spotify app client ID |
-| `SPOTIPY_CLIENT_SECRET` | Spotify app client secret |
-| `SPOTIPY_REDIRECT_URI` | Redirect URI (must match app settings) |
+| `SPOTIFY_CLIENT_ID` | Spotify app client ID |
+| `SPOTIFY_CLIENT_SECRET` | Spotify app client secret |
+| `SPOTIFY_REDIRECT_URI` | Redirect URI (must match app settings) |
 
 ### Optional
 
 | Variable | Default | Description |
 |---|---|---|
-| `SPOTIPY_CACHE_PATH` | `.spopy_cache` | Token cache file path |
-| `SPOTIPY_USERNAME` | | Spotify username (for multi-user) |
-| `SPOTIFY_CLI_SCOPES` | (sensible defaults) | Override OAuth scopes |
-| `SPOTIFY_CLI_DEFAULT_DEVICE_ID` | | Fallback device ID |
-| `SPOTIFY_CLI_DEFAULT_DEVICE_NAME` | | Fallback device name |
-| `SPOTIFY_CLI_MARKET` | | ISO country code for market |
-| `SPOTIFY_CLI_OUTPUT` | `rich` | Default output: `rich`, `plain`, `json` |
-| `SPOTIFY_CLI_TIMEOUT_SECONDS` | `15` | API request timeout |
-| `SPOTIFY_CLI_RETRIES` | `3` | Max retry attempts |
-| `SPOTIFY_CLI_BACKOFF_FACTOR` | `0.5` | Exponential backoff factor |
-| `SPOTIFY_CLI_DEBUG` | `0` | Enable debug logging (`1`) |
-| `SPOTIFY_CLI_OPEN_BROWSER` | `1` | Allow browser opening (`0` to disable) |
-| `SPOTIFY_CLI_NO_COLOR` | `0` | Disable color output (`1`) |
-| `SPOTIFY_CLI_STATE_FILE` | | Path to persist auth state |
+| `SPOTIFY_CACHE_PATH` | `.spopy_cache` | Token cache file path |
+| `SPOTIFY_USERNAME` | | Spotify username (for multi-user) |
+| `SPOTIFY_SCOPES` | (sensible defaults) | Override OAuth scopes |
+| `SPOTIFY_DEFAULT_DEVICE_ID` | | Fallback device ID |
+| `SPOTIFY_DEFAULT_DEVICE_NAME` | | Fallback device name |
+| `SPOTIFY_MARKET` | | ISO country code for market |
+| `SPOTIFY_OUTPUT` | `rich` | Default output: `rich`, `plain`, `json` |
+| `SPOTIFY_TIMEOUT_SECONDS` | `15` | API request timeout |
+| `SPOTIFY_RETRIES` | `3` | Max retry attempts |
+| `SPOTIFY_BACKOFF_FACTOR` | `0.5` | Exponential backoff factor |
+| `SPOTIFY_DEBUG` | `0` | Enable debug logging (`1`) |
+| `SPOTIFY_OPEN_BROWSER` | `1` | Allow browser opening (`0` to disable) |
+| `SPOTIFY_NO_COLOR` | `0` | Disable color output (`1`) |
+| `SPOTIFY_STATE_FILE` | | Path to persist auth state |
 
 ## Commands
 
@@ -379,8 +379,8 @@ For playback commands, devices are selected in this order:
 1. `--device-id` flag
 2. `--device-name` flag
 3. Currently active Spotify device
-4. `SPOTIFY_CLI_DEFAULT_DEVICE_ID` env var
-5. `SPOTIFY_CLI_DEFAULT_DEVICE_NAME` env var
+4. `SPOTIFY_DEFAULT_DEVICE_ID` env var
+5. `SPOTIFY_DEFAULT_DEVICE_NAME` env var
 6. Error with helpful message
 
 ## Known Limitations
