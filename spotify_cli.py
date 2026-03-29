@@ -853,7 +853,7 @@ def auth_login(
         code = oauth.parse_response_code(redirect_response)
         if not code or code == redirect_response:
             _die("Could not parse authorization code from URL.", ExitCode.INVALID_INPUT)
-        token_info = oauth.get_access_token(code, as_dict=True, check_cache=False)
+        token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
             _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
@@ -898,7 +898,7 @@ def auth_callback_url(
             _console.print("[yellow]Warning: state mismatch. Proceeding anyway.[/]")
 
     try:
-        token_info = oauth.get_access_token(code, as_dict=True, check_cache=False)
+        token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
             _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
@@ -927,7 +927,7 @@ def auth_code_cmd(
 
     oauth = _build_oauth(open_browser=False)
     try:
-        token_info = oauth.get_access_token(code, as_dict=True, check_cache=False)
+        token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
             _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
