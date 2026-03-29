@@ -1,4 +1,5 @@
 .spopy_cache
+# legacy cache name
 .spotify_cli_cache
 *.pyc
 __pycache__/

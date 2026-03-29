@@ -28,7 +28,7 @@ Designed for both local use and self-hosting on a remote gateway (Dokku, VPS, et
 curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash
 ```
 
-This checks for uv (installs it if missing), downloads `spotify_cli.py` to `~/.local/bin/spopy`, and prints next steps.
+This checks for uv (installs it if missing), downloads `spopy` to `~/.local/bin/spopy`, and prints next steps.
 
 ### Manual
 
@@ -37,7 +37,7 @@ This checks for uv (installs it if missing), downloads `spotify_cli.py` to `~/.l
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Download the CLI
-curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/spotify_cli.py -o ~/.local/bin/spopy
+curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/spopy -o ~/.local/bin/spopy
 chmod +x ~/.local/bin/spopy
 ```
 
@@ -46,7 +46,7 @@ Or clone the repo and run directly:
 ```bash
 git clone https://github.com/amitkot/spopy.git
 cd spopy
-./spotify_cli.py --help
+./spopy --help
 ```
 
 ## Spotify App Setup

@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # spopy installer
-# Downloads spopy (spotify_cli.py) to ~/.local/bin and ensures uv is available.
+# Downloads spopy (spopy) to ~/.local/bin and ensures uv is available.
 
 REPO="amitkot/spopy"
 BRANCH="main"
 INSTALL_DIR="${SPOPY_INSTALL_DIR:-$HOME/.local/bin}"
 BIN_NAME="spopy"
-URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/spotify_cli.py"
+URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/spopy"
 
 info()  { printf '\033[0;34m%s\033[0m\n' "$*"; }
 ok()    { printf '\033[0;32m%s\033[0m\n' "$*"; }

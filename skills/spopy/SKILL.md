@@ -2,12 +2,12 @@
 name: spopy
 description: Control Spotify from the terminal using spopy — play, pause, search, queue, playlists, and more
 globs:
-  - "spotify_cli.py"
+  - "spopy"
 ---
 
 # spopy
 
-`spopy` is a single-file Spotify CLI. Run commands with `spopy` or `./spotify_cli.py`.
+`spopy` is a single-file Spotify CLI. Run commands with `spopy` or `./spopy`.
 
 ## Always use --json
 
