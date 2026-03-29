@@ -652,6 +652,7 @@ app = typer.Typer(
     help="Production-quality Spotify CLI. Supports local and gateway auth bootstrap.",
     no_args_is_help=True,
     rich_markup_mode="rich",
+    context_settings={"allow_interspersed_args": True},
 )
 
 auth_app = typer.Typer(name="auth", help="Authentication and token management.", no_args_is_help=True)
@@ -680,6 +681,47 @@ app.add_typer(mood_app)
 
 
 # ---------------------------------------------------------------------------
+# Shared output/debug options — applied at root and on every sub-app callback
+# so that --json/--plain/--debug work in any position and appear in --help.
+# ---------------------------------------------------------------------------
+
+def _apply_output_flags(
+    json_out: bool = False,
+    plain: bool = False,
+    debug: bool = False,
+    no_color: bool = False,
+) -> None:
+    """Merge output flags into global state (idempotent, last-write-wins)."""
+    if json_out:
+        _state.flag_json = True
+    if plain:
+        _state.flag_plain = True
+    if debug:
+        _state.flag_debug = True
+        _setup_logging(True)
+    if no_color:
+        _state.flag_no_color = True
+        _out.no_color = True
+        _console.no_color = True
+
+
+def _output_options_callback(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Shared callback for sub-app output options."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+# Register the shared callback on every sub-app
+for _sub_app in (auth_app, devices_app, track_app, album_app, artist_app,
+                 playlist_app, library_app, queue_app, top_app, genre_app, mood_app):
+    _sub_app.callback(invoke_without_command=True)(_output_options_callback)
+
+
+# ---------------------------------------------------------------------------
 # Global callback (options applied to every command)
 # ---------------------------------------------------------------------------
 
@@ -700,15 +742,12 @@ def _global_options(
 ) -> None:
     """Spotify CLI — rich, production-quality Spotify control from your terminal."""
     _load_env()
-    _state.flag_json = json_out
-    _state.flag_plain = plain
-    _state.flag_debug = debug
+    _apply_output_flags(json_out, plain, debug, no_color)
     _state.flag_market = market
     _state.flag_device_id = device_id
     _state.flag_device_name = device_name
     _state.flag_limit = limit
     _state.flag_offset = offset
-    _state.flag_no_color = no_color
     _state.flag_yes = yes
     _state.flag_exact = exact
     _state.flag_interactive = interactive
