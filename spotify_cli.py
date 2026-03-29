@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
+import warnings
 import os
 import re
 import sys
@@ -30,6 +31,8 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any, NoReturn
 from urllib.parse import parse_qs, urlparse
+
+warnings.filterwarnings("ignore", message=".*get_access_token.*", category=DeprecationWarning)
 
 import spotipy
 import typer
@@ -868,6 +871,63 @@ def _global_options(
 # AUTH COMMANDS
 # ===========================================================================
 
+@auth_app.command("setup-guide")
+def auth_setup_guide() -> None:
+    """Print step-by-step instructions for creating a Spotify app and configuring the CLI."""
+    guide = """\
+[bold]Spotify CLI — First-Time Setup Guide[/]
+
+[bold]Step 1: Create a Spotify App[/]
+
+  1. Go to [link=https://developer.spotify.com/dashboard]https://developer.spotify.com/dashboard[/link]
+  2. Log in with your Spotify account.
+  3. Click [bold]Create App[/].
+  4. Fill in:
+     • [bold]App name:[/]     anything (e.g. "My CLI")
+     • [bold]Description:[/]  anything
+     • [bold]Redirect URI:[/] [green]http://127.0.0.1:8888/callback[/]
+     • [bold]APIs:[/]         select [green]Web API[/]
+  5. Click [bold]Save[/].
+  6. Go to [bold]Settings[/] and note your [bold]Client ID[/] and [bold]Client Secret[/].
+
+[bold]Step 2: Set environment variables[/]
+
+  [green]export SPOTIPY_CLIENT_ID='your_client_id'[/]
+  [green]export SPOTIPY_CLIENT_SECRET='your_client_secret'[/]
+  [green]export SPOTIPY_REDIRECT_URI='http://127.0.0.1:8888/callback'[/]
+
+  Tip: Add these to your shell profile (~/.bashrc, ~/.zshrc) or use
+  Dokku config:set for gateway deployment.
+
+[bold]Step 3: Authenticate[/]
+
+  [bold]Option A — Local machine with a browser:[/]
+    [green]spotify_cli.py auth login[/]
+
+  [bold]Option B — Remote gateway (no browser):[/]
+    [green]spotify_cli.py auth url[/]
+    Open the printed URL in a browser on another machine.
+    After approving, the browser shows an error page — this is expected.
+    Copy the full URL from the address bar, then:
+    [green]spotify_cli.py auth callback-url '<paste_the_full_url>'[/]
+
+  [bold]Option C — Transfer token from local to gateway:[/]
+    On local:  [green]spotify_cli.py auth login[/]
+    On local:  [green]spotify_cli.py auth export-token-info --raw --yes > token.json[/]
+    Copy token.json to the gateway, then:
+    On gateway: [green]spotify_cli.py auth import-token-info token.json[/]
+
+[bold]Step 4: Verify[/]
+
+  [green]spotify_cli.py auth status[/]
+  [green]spotify_cli.py doctor[/]
+  [green]spotify_cli.py devices list[/]
+
+[dim]Important: The redirect URI in your Spotify app settings MUST exactly match
+SPOTIPY_REDIRECT_URI. Use http://127.0.0.1 (not localhost).[/]"""
+    _out.print(guide)
+
+
 @auth_app.command("status")
 def auth_status() -> None:
     """Show auth configuration and token status."""
@@ -958,14 +1018,21 @@ def auth_url(
             "state": state_val,
         })
     else:
-        _out.print(Panel(url, title="Authorization URL", subtitle="Open this in a browser"))
+        _out.print("[bold]Authorization URL:[/]\n")
+        print(url)
         _out.print(f"\n[dim]Redirect URI:[/] {_state.redirect_uri}")
         _out.print(f"[dim]State:[/] {state_val}")
         _out.print("\n[bold]Next steps:[/]")
         _out.print("  1. Open the URL above in a browser.")
-        _out.print("  2. Authorize the app.")
-        _out.print("  3. Copy the redirect URL from the browser address bar.")
-        _out.print("  4. Run: [green]spotify_cli.py auth callback-url '<redirected_url>'[/]")
+        _out.print("  2. If this is your first time, Spotify will ask you to approve the app.")
+        _out.print("     If you already approved it, it skips straight to step 3.")
+        _out.print('  3. Your browser will redirect to a page that shows [yellow]"Unable to connect"[/]')
+        _out.print("     or a similar error. [bold]This is expected![/] The redirect URL in your")
+        _out.print("     browser's address bar contains the authorization code we need.")
+        _out.print("  4. Copy the [bold]entire URL[/] from the address bar (it starts with")
+        _out.print(f"     [dim]{_state.redirect_uri}?code=...[/])")
+        _out.print("  5. Run:")
+        _out.print("     [green]spotify_cli.py auth callback-url '<paste_the_full_url>'[/]")
 
 
 @auth_app.command("login")
@@ -987,13 +1054,18 @@ def auth_login(
             should_open = False
 
     if not should_open:
-        _out.print(Panel(url, title="Authorization URL"))
-        _out.print("\n[bold]No browser mode.[/] After authorizing, use one of:")
-        _out.print("  [green]spotify_cli.py auth callback-url '<full_redirect_url>'[/]")
-        _out.print("  [green]spotify_cli.py auth code '<authorization_code>'[/]")
+        _out.print("[bold]Authorization URL:[/]\n")
+        print(url)
+        _out.print("\n[bold]No browser mode.[/] Open the URL above in a browser.")
+        _out.print('After approving (or if already approved), your browser will show an [yellow]"Unable to')
+        _out.print('connect"[/] error page. [bold]This is expected.[/]')
+        _out.print("Copy the [bold]entire URL[/] from the address bar, then run one of:")
+        _out.print("  [green]spotify_cli.py auth callback-url '<paste_the_full_url>'[/]")
+        _out.print("  [green]spotify_cli.py auth code '<just_the_code_param>'[/]")
         return
 
-    _out.print("\nAfter authorizing, paste the [bold]full redirect URL[/] below.")
+    _out.print("\nAfter authorizing, your browser will show an error page — [bold]this is expected.[/]")
+    _out.print("Copy the [bold]entire URL[/] from the address bar and paste it below.")
     redirect_response = typer.prompt("Redirect URL")
     try:
         code = oauth.parse_response_code(redirect_response)
