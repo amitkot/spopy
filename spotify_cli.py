@@ -48,6 +48,7 @@ from spotipy.oauth2 import SpotifyOAuth
 # ---------------------------------------------------------------------------
 
 APP_NAME = "spotify-cli"
+__version__ = "0.1.0"
 
 DEFAULT_SCOPES = " ".join([
     "user-read-playback-state",
@@ -832,11 +833,22 @@ def _mood_cb(
 
 
 # ---------------------------------------------------------------------------
+# Version callback
+# ---------------------------------------------------------------------------
+
+def _version_callback(value: bool) -> None:
+    if value:
+        print(f"spotify-cli {__version__}")
+        raise typer.Exit()
+
+
+# ---------------------------------------------------------------------------
 # Global callback (options applied to every command)
 # ---------------------------------------------------------------------------
 
 @app.callback()
 def _global_options(
+    version: bool = typer.Option(False, "--version", "-V", help="Show version and exit.", callback=_version_callback, is_eager=True),
     json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
     plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
     debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
