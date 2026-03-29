@@ -652,7 +652,9 @@ app = typer.Typer(
     help="Production-quality Spotify CLI. Supports local and gateway auth bootstrap.",
     no_args_is_help=True,
     rich_markup_mode="rich",
-    context_settings={"allow_interspersed_args": True},
+    # Note: allow_interspersed_args is left as default (False) so that
+    # sub-app --help works correctly.  Top-level commands that produce output
+    # accept --json/--plain as their own options instead.
 )
 
 auth_app = typer.Typer(name="auth", help="Authentication and token management.", no_args_is_help=True)
@@ -705,20 +707,125 @@ def _apply_output_flags(
         _console.no_color = True
 
 
-def _output_options_callback(
+@auth_app.callback()
+def _auth_cb(
     json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
     plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
     debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
     no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
 ) -> None:
-    """Shared callback for sub-app output options."""
+    """Authentication and token management."""
     _apply_output_flags(json_out, plain, debug, no_color)
 
 
-# Register the shared callback on every sub-app
-for _sub_app in (auth_app, devices_app, track_app, album_app, artist_app,
-                 playlist_app, library_app, queue_app, top_app, genre_app, mood_app):
-    _sub_app.callback(invoke_without_command=True)(_output_options_callback)
+@devices_app.callback()
+def _devices_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Device listing and control."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@track_app.callback()
+def _track_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Track operations."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@album_app.callback()
+def _album_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Album operations."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@artist_app.callback()
+def _artist_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Artist operations."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@playlist_app.callback()
+def _playlist_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Playlist management."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@library_app.callback()
+def _library_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Library (saved items) operations."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@queue_app.callback()
+def _queue_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Queue operations."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@top_app.callback()
+def _top_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Top tracks and artists."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@genre_app.callback()
+def _genre_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Genre browsing and search."""
+    _apply_output_flags(json_out, plain, debug, no_color)
+
+
+@mood_app.callback()
+def _mood_cb(
+    json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
+    plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
+    debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable color output."),
+) -> None:
+    """Mood-based search (heuristic)."""
+    _apply_output_flags(json_out, plain, debug, no_color)
 
 
 # ---------------------------------------------------------------------------
