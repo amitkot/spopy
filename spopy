@@ -1167,7 +1167,10 @@ def auth_login(
             _die("Could not parse authorization code from URL.", ExitCode.INVALID_INPUT)
         token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
-            _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
+            # SpotifyPKCE may return just the token string; fetch full info from cache
+            token_info = oauth.get_cached_token()
+            if not token_info:
+                _die("Auth succeeded but could not read cached token.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
         sp = spotipy.Spotify(auth=token_info["access_token"])
         me = _api_call(sp.current_user)
@@ -1208,7 +1211,10 @@ def auth_callback_url(
     try:
         token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
-            _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
+            # SpotifyPKCE may return just the token string; fetch full info from cache
+            token_info = oauth.get_cached_token()
+            if not token_info:
+                _die("Auth succeeded but could not read cached token.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
         _cleanup_pkce_state()
         sp = spotipy.Spotify(auth=token_info["access_token"])
@@ -1233,7 +1239,10 @@ def auth_code_cmd(
     try:
         token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
-            _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
+            # SpotifyPKCE may return just the token string; fetch full info from cache
+            token_info = oauth.get_cached_token()
+            if not token_info:
+                _die("Auth succeeded but could not read cached token.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
         _cleanup_pkce_state()
         sp = spotipy.Spotify(auth=token_info["access_token"])
