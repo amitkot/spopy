@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>spopy — Spotify CLI</title>
+    <meta name="description" content="A production-quality Spotify CLI in a single Python file. Zero-config auth, rich output, works everywhere.">
+    <style>
+        :root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e0e0e0; --muted: #8b949e; --green: #7ee787; --blue: #58a6ff; --yellow: #d29922; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code { background: var(--surface); padding: 2px 6px; border-radius: 4px; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 0.9em; }
+
+        .hero { max-width: 700px; margin: 0 auto; padding: 80px 20px 40px; text-align: center; }
+        .hero h1 { font-size: 3em; color: #fff; margin-bottom: 8px; letter-spacing: -0.02em; }
+        .hero h1 span { color: var(--green); }
+        .hero p.tagline { font-size: 1.2em; color: var(--muted); margin-bottom: 40px; }
+
+        .install { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin: 0 auto 16px; max-width: 560px; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 0.95em; color: var(--green); cursor: pointer; transition: border-color 0.2s; position: relative; text-align: left; }
+        .install:hover { border-color: var(--green); }
+        .install .prompt { color: var(--muted); user-select: none; }
+        .install-hint { text-align: center; color: var(--muted); font-size: 0.8em; margin-bottom: 40px; }
+
+        .section { max-width: 700px; margin: 0 auto; padding: 0 20px 48px; }
+        .section h2 { font-size: 1.3em; color: #fff; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .feature { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+        .feature strong { color: #fff; display: block; margin-bottom: 4px; }
+        .feature span { color: var(--muted); font-size: 0.9em; }
+
+        .commands { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 0.85em; line-height: 1.8; overflow-x: auto; }
+        .commands .comment { color: var(--muted); }
+        .commands .cmd { color: var(--green); }
+
+        .footer { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.85em; border-top: 1px solid var(--border); max-width: 700px; margin: 0 auto; }
+        .footer a { color: var(--muted); }
+        .footer a:hover { color: var(--text); }
+
+        .badge { display: inline-block; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 0.8em; color: var(--muted); margin: 0 4px 8px; }
+
+        .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--green); color: var(--bg); padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 0.9em; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 600px) { .features { grid-template-columns: 1fr; } .hero h1 { font-size: 2.2em; } }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1><span>spopy</span></h1>
+        <p class="tagline">Spotify from your terminal. Single file, zero config.</p>
+        <div>
+            <span class="badge">Python</span>
+            <span class="badge">Single file</span>
+            <span class="badge">Zero config</span>
+            <span class="badge">PKCE auth</span>
+        </div>
+    </div>
+
+    <div class="install" onclick="copyInstall()">
+        <span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash
+    </div>
+    <p class="install-hint">Click to copy. Requires <a href="https://docs.astral.sh/uv/">uv</a>. Or: <code>pip install uv</code></p>
+
+    <div class="section">
+        <h2>Get started</h2>
+        <div class="commands">
+            <div><span class="comment"># Install and authenticate</span></div>
+            <div><span class="cmd">spopy auth login</span></div>
+            <div><br></div>
+            <div><span class="comment"># Play music</span></div>
+            <div><span class="cmd">spopy play "bohemian rhapsody"</span></div>
+            <div><span class="cmd">spopy status</span></div>
+            <div><span class="cmd">spopy next</span></div>
+            <div><br></div>
+            <div><span class="comment"># Search and queue</span></div>
+            <div><span class="cmd">spopy search "pink floyd" --type artist</span></div>
+            <div><span class="cmd">spopy queue add "comfortably numb"</span></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Features</h2>
+        <div class="features">
+            <div class="feature">
+                <strong>Zero config</strong>
+                <span>Built-in Spotify app with PKCE auth. Just run <code>auth login</code>.</span>
+            </div>
+            <div class="feature">
+                <strong>Single file</strong>
+                <span>One Python script with inline deps. No virtualenv, no package manager.</span>
+            </div>
+            <div class="feature">
+                <strong>Full control</strong>
+                <span>Play, pause, seek, volume, shuffle, repeat, queue, playlists, library.</span>
+            </div>
+            <div class="feature">
+                <strong>Search everything</strong>
+                <span>Tracks, albums, artists, playlists. URI, URL, ID, or text query.</span>
+            </div>
+            <div class="feature">
+                <strong>JSON output</strong>
+                <span>Machine-readable by default when piped. Rich tables for humans.</span>
+            </div>
+            <div class="feature">
+                <strong>Server-ready</strong>
+                <span>Headless auth, token export/import, Dokku-friendly. No secrets leaked.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Commands</h2>
+        <div class="commands">
+            <div><span class="comment"># Playback</span></div>
+            <div><span class="cmd">spopy play | pause | resume | next | previous</span></div>
+            <div><span class="cmd">spopy seek 1:30 | volume 50 | shuffle toggle | repeat track</span></div>
+            <div><br></div>
+            <div><span class="comment"># Browse</span></div>
+            <div><span class="cmd">spopy search "query" --type track,album,artist,playlist</span></div>
+            <div><span class="cmd">spopy track | album | artist | playlist show "query"</span></div>
+            <div><br></div>
+            <div><span class="comment"># Queue &amp; playlists</span></div>
+            <div><span class="cmd">spopy queue list | add "song"</span></div>
+            <div><span class="cmd">spopy playlist list | create | add | remove | clear</span></div>
+            <div><br></div>
+            <div><span class="comment"># Library &amp; discovery</span></div>
+            <div><span class="cmd">spopy library tracks | albums | save | unsave</span></div>
+            <div><span class="cmd">spopy recent | top tracks | top artists | discover</span></div>
+            <div><br></div>
+            <div><span class="comment"># Status &amp; diagnostics</span></div>
+            <div><span class="cmd">spopy status | devices list | doctor</span></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>
+            <a href="https://github.com/amitkot/spopy">GitHub</a> &middot;
+            <a href="https://github.com/amitkot/spopy/releases">Releases</a> &middot;
+            <a href="https://github.com/amitkot/spopy/blob/main/CHANGELOG.md">Changelog</a> &middot;
+            MIT License
+        </p>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard</div>
+    <script>
+        function copyInstall() {
+            navigator.clipboard.writeText("curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash");
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>

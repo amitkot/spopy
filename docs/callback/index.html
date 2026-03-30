@@ -6,23 +6,21 @@
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 60px auto; padding: 0 20px; color: #e0e0e0; background: #0d1117; }
         h1 { font-size: 1.5em; color: #fff; }
-        .command { background: #161b22; color: #7ee787; padding: 16px; border-radius: 8px; border: 1px solid #30363d; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 0.9em; word-break: break-all; cursor: pointer; position: relative; transition: border-color 0.2s; }
+        .command { background: #161b22; color: #7ee787; padding: 16px; border-radius: 8px; border: 1px solid #30363d; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 0.9em; word-break: break-all; cursor: pointer; transition: border-color 0.2s; }
         .command:hover { border-color: #7ee787; }
-        .copied { position: absolute; right: 12px; top: 12px; color: #7ee787; font-size: 0.8em; }
-        .step { margin: 20px 0; }
         .muted { color: #8b949e; font-size: 0.85em; }
         .error { color: #f85149; }
         a { color: #58a6ff; }
         code { background: #161b22; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px); background: #7ee787; color: #0d1117; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 0.9em; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
     <h1>spopy</h1>
     <div id="success" style="display:none">
         <p>Authorization successful. Copy this command and run it in your terminal:</p>
-        <div class="command" id="cmd" onclick="copyCmd()">
-            <span id="copied" class="copied" style="display:none">Copied!</span>
-        </div>
+        <div class="command" id="cmd" onclick="copyCmd()"></div>
         <p class="muted">Click the command to copy it. After running it, you can close this page.</p>
     </div>
     <div id="error-auth" style="display:none">
@@ -34,6 +32,7 @@
         <p class="muted">This page receives the Spotify authorization redirect.</p>
         <p>To get started, run <code>spopy auth login</code> in your terminal.</p>
     </div>
+    <div class="toast" id="toast">Copied to clipboard</div>
     <script>
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
@@ -50,9 +49,9 @@
         }
         function copyCmd() {
             navigator.clipboard.writeText(document.getElementById('cmd').textContent);
-            const el = document.getElementById('copied');
-            el.style.display = 'inline';
-            setTimeout(() => el.style.display = 'none', 2000);
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
         }
     </script>
 </body>
