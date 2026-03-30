@@ -875,8 +875,13 @@ def _global_options(
     exact: bool = typer.Option(False, "--exact", help="Prefer exact name matches."),
     interactive: bool = typer.Option(False, "--interactive", "-i", help="Interactive selection."),
 ) -> None:
-    """Spotify CLI — rich, production-quality Spotify control from your terminal."""
+    """spopy — production-quality Spotify control from your terminal."""
     _load_env()
+    # Auto-detect non-interactive (piped) usage: default to JSON + yes
+    if not sys.stdin.isatty():
+        if not json_out and not plain:
+            json_out = True
+        yes = True
     _apply_output_flags(json_out, plain, debug, no_color)
     _state.flag_market = market
     _state.flag_device_id = device_id
