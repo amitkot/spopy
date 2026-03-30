@@ -392,6 +392,45 @@ def _write_cache(token_info: dict[str, Any]) -> None:
         pass
 
 
+def _pkce_state_path() -> Path:
+    """Path for persisting PKCE code_verifier between auth url and callback."""
+    return Path(_state.cache_path).with_suffix(".pkce")
+
+
+def _save_pkce_state(auth_manager: SpotifyOAuth | SpotifyPKCE, state: str) -> None:
+    """Save PKCE code_verifier and state so callback-url can use them."""
+    data: dict[str, str] = {"state": state}
+    if isinstance(auth_manager, SpotifyPKCE) and hasattr(auth_manager, "_code_verifier"):
+        data["code_verifier"] = auth_manager._code_verifier
+    p = _pkce_state_path()
+    p.write_text(json.dumps(data))
+    try:
+        p.chmod(0o600)
+    except OSError:
+        pass
+
+
+def _restore_pkce_state(auth_manager: SpotifyOAuth | SpotifyPKCE) -> str | None:
+    """Restore PKCE code_verifier into the auth manager. Returns saved state."""
+    p = _pkce_state_path()
+    if not p.exists():
+        return None
+    try:
+        data = json.loads(p.read_text())
+        if isinstance(auth_manager, SpotifyPKCE) and "code_verifier" in data:
+            auth_manager._code_verifier = data["code_verifier"]
+        return data.get("state")
+    except Exception:
+        return None
+
+
+def _cleanup_pkce_state() -> None:
+    """Remove the PKCE state file after successful auth."""
+    p = _pkce_state_path()
+    if p.exists():
+        p.unlink(missing_ok=True)
+
+
 # ---------------------------------------------------------------------------
 # Retry wrapper
 # ---------------------------------------------------------------------------
@@ -1051,6 +1090,7 @@ def auth_url(
     state_val = secrets.token_urlsafe(16)
     url = oauth.get_authorize_url(state=state_val)
 
+    _save_pkce_state(oauth, state_val)
     if _state.state_file:
         Path(_state.state_file).write_text(json.dumps({"state": state_val}))
         logger.debug("State saved to %s", _state.state_file)
@@ -1087,6 +1127,7 @@ def auth_login(
     should_open = open_browser and _state.open_browser
     oauth = _build_auth_manager(open_browser=False)
     url = oauth.get_authorize_url()
+    _save_pkce_state(oauth, "")
 
     if should_open:
         _out.print(f"[bold]Opening browser for authorization…[/]")
@@ -1116,7 +1157,10 @@ def auth_login(
     else:
         _out.print("\nAfter authorizing, your browser will show an error page — [bold]this is expected.[/]")
         _out.print("Copy the [bold]entire URL[/] from the address bar and paste it below.")
-    redirect_response = typer.prompt("Redirect URL")
+    redirect_response = typer.prompt("Paste here")
+    # Strip command prefix if user pasted the full command from the callback page
+    redirect_response = re.sub(r"^spopy\s+auth\s+callback-url\s+['\"]?", "", redirect_response.strip())
+    redirect_response = redirect_response.rstrip("'\"")
     try:
         code = oauth.parse_response_code(redirect_response)
         if not code or code == redirect_response:
@@ -1138,14 +1182,20 @@ def auth_login(
 
 @auth_app.command("callback-url")
 def auth_callback_url(
-    url: str = typer.Argument(..., help="Full redirected callback URL."),
+    url: str = typer.Argument(..., help="Full redirected callback URL or paste from callback page."),
 ) -> None:
     """Exchange a callback URL (pasted from the browser) for tokens."""
+    # Strip command prefix if user pasted the full command from callback page
+    url = re.sub(r"^spopy\s+auth\s+callback-url\s+['\"]?", "", url.strip())
+    url = url.rstrip("'\"")
+
     oauth = _build_auth_manager(open_browser=False)
+    # Restore PKCE code_verifier from the auth url / login step
+    _restore_pkce_state(oauth)
+
     try:
         code = oauth.parse_response_code(url)
         if not code or code == url:
-            # Try manual parse
             parsed = urlparse(url)
             qs = parse_qs(parsed.query)
             codes = qs.get("code", [])
@@ -1155,21 +1205,12 @@ def auth_callback_url(
     except Exception as exc:
         _die(f"Failed to parse callback URL: {exc}", ExitCode.INVALID_INPUT)
 
-    # Validate state if state file exists
-    parsed = urlparse(url)
-    qs = parse_qs(parsed.query)
-    url_state = qs.get("state", [None])[0]
-    if _state.state_file and Path(_state.state_file).exists():
-        saved = json.loads(Path(_state.state_file).read_text())
-        expected_state = saved.get("state")
-        if expected_state and url_state and url_state != expected_state:
-            _console.print("[yellow]Warning: state mismatch. Proceeding anyway.[/]")
-
     try:
         token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
             _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
+        _cleanup_pkce_state()
         sp = spotipy.Spotify(auth=token_info["access_token"])
         me = _api_call(sp.current_user)
         name = me.get("display_name") or me.get("id", "?") if me else "unknown"
@@ -1187,18 +1228,14 @@ def auth_code_cmd(
     state: str = typer.Option("", "--state", help="State value for validation."),
 ) -> None:
     """Exchange a raw authorization code for tokens."""
-    if _state.state_file and Path(_state.state_file).exists() and state:
-        saved = json.loads(Path(_state.state_file).read_text())
-        expected = saved.get("state")
-        if expected and state != expected:
-            _console.print("[yellow]Warning: state mismatch.[/]")
-
     oauth = _build_auth_manager(open_browser=False)
+    _restore_pkce_state(oauth)
     try:
         token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
             _die("Unexpected token format.", ExitCode.INTERNAL_ERROR)
         _write_cache(token_info)
+        _cleanup_pkce_state()
         sp = spotipy.Spotify(auth=token_info["access_token"])
         me = _api_call(sp.current_user)
         name = me.get("display_name") or me.get("id", "?") if me else "unknown"
