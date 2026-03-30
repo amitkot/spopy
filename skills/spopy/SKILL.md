@@ -12,39 +12,54 @@ globs:
 # Playback
 spopy status
 spopy play "song name"
-spopy pause | resume | next | previous
+spopy pause
+spopy resume
+spopy next
+spopy previous
 spopy seek 1:30                  # +10s, -15s, ms
 spopy volume 50
-spopy shuffle on | off | toggle
-spopy repeat off | track | context
+spopy shuffle on                 # on, off, toggle
+spopy repeat track               # off, track, context
 
 # Search
-spopy search "query" --type track,album,artist,playlist
+spopy search "query" --type track
+spopy search "query" --type album,artist,playlist
 
 # Queue
-spopy queue list | add "song"
+spopy queue list
+spopy queue add "song"
 
 # Playlists
-spopy playlist list | create "Name" | items "Name"
+spopy playlist list
+spopy playlist create "Name"
+spopy playlist items "Name"
 spopy playlist add "Name" "song1" "song2"
 spopy playlist remove "Name" "song1"
 spopy playlist clear "Name"
 
 # Library
-spopy track save | unsave | check "song"
-spopy library tracks | albums
+spopy track save "song"
+spopy track unsave "song"
+spopy track check "song"
+spopy library tracks
+spopy library albums
 
 # Devices
-spopy devices list | transfer "Device Name"
+spopy devices list
+spopy devices transfer "Device Name"
 
 # Discovery
-spopy recent | top tracks | top artists
-spopy genre list | genre search "rock"
+spopy recent
+spopy top tracks
+spopy top artists
+spopy genre list
+spopy genre search "rock"
 spopy mood search "chill"
 
 # Diagnostics
 spopy doctor
-spopy auth status | setup-guide
+spopy auth status
+spopy auth setup-guide
 ```
 
 Accepts: Spotify URI, URL, ID, or search query.
