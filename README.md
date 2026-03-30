@@ -97,7 +97,7 @@ All configuration is via environment variables. **None are required** — spopy 
 
 | Variable | Default | Description |
 |---|---|---|
-| `SPOTIFY_CACHE_PATH` | `.spopy_cache` | Token cache file path |
+| `SPOTIFY_CACHE_PATH` | `~/.config/spopy/token_cache` | Token cache file path |
 | `SPOTIFY_USERNAME` | | Spotify username (for multi-user) |
 | `SPOTIFY_SCOPES` | (sensible defaults) | Override OAuth scopes |
 | `SPOTIFY_DEFAULT_DEVICE_ID` | | Fallback device ID |

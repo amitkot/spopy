@@ -67,7 +67,8 @@ DEFAULT_SCOPES = " ".join([
     "user-read-private",
 ])
 
-DEFAULT_CACHE_PATH = ".spopy_cache"
+DEFAULT_CACHE_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "spopy"
+DEFAULT_CACHE_PATH = str(DEFAULT_CACHE_DIR / "token_cache")
 DEFAULT_CLIENT_ID = "77e240d32097423da4d574b772c721a4"
 DEFAULT_REDIRECT_URI_PKCE = "https://spopy.amitkot.com/callback"
 DEFAULT_REDIRECT_URI_LOCAL = "http://127.0.0.1:8888/callback"
@@ -747,17 +748,17 @@ top_app = typer.Typer(name="top", help="Top tracks and artists.", no_args_is_hel
 genre_app = typer.Typer(name="genre", help="Genre browsing and search.", no_args_is_help=True)
 mood_app = typer.Typer(name="mood", help="Mood-based search (heuristic).", no_args_is_help=True)
 
-app.add_typer(auth_app)
-app.add_typer(devices_app)
-app.add_typer(track_app)
-app.add_typer(album_app)
-app.add_typer(artist_app)
-app.add_typer(playlist_app)
-app.add_typer(library_app)
-app.add_typer(queue_app)
-app.add_typer(top_app)
-app.add_typer(genre_app)
-app.add_typer(mood_app)
+app.add_typer(auth_app, rich_help_panel="Setup & Diagnostics")
+app.add_typer(devices_app, rich_help_panel="Setup & Diagnostics")
+app.add_typer(track_app, rich_help_panel="Browse & Search")
+app.add_typer(album_app, rich_help_panel="Browse & Search")
+app.add_typer(artist_app, rich_help_panel="Browse & Search")
+app.add_typer(playlist_app, rich_help_panel="Browse & Search")
+app.add_typer(library_app, rich_help_panel="Browse & Search")
+app.add_typer(queue_app, rich_help_panel="Playback")
+app.add_typer(top_app, rich_help_panel="Discovery")
+app.add_typer(genre_app, rich_help_panel="Discovery")
+app.add_typer(mood_app, rich_help_panel="Discovery")
 
 
 # ---------------------------------------------------------------------------
@@ -1372,7 +1373,7 @@ def auth_logout(
 # DOCTOR
 # ===========================================================================
 
-@app.command("doctor")
+@app.command("doctor", rich_help_panel="Setup & Diagnostics")
 def doctor() -> None:
     """Diagnose auth, config, connectivity, and playback readiness."""
     checks: list[tuple[str, str, str]] = []  # (label, status_icon, detail)
@@ -1481,7 +1482,7 @@ def doctor() -> None:
 # STATUS / CURRENT
 # ===========================================================================
 
-@app.command("status")
+@app.command("status", rich_help_panel="Now Playing")
 def status_cmd() -> None:
     """Show combined playback summary."""
     sp = _get_spotify()
@@ -1535,7 +1536,7 @@ def status_cmd() -> None:
     _print_output("status", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: info)
 
 
-@app.command("current")
+@app.command("current", rich_help_panel="Now Playing")
 def current_cmd() -> None:
     """Show detailed currently playing item."""
     sp = _get_spotify()
@@ -1659,7 +1660,7 @@ def devices_transfer(
 # PLAYBACK CONTROL
 # ===========================================================================
 
-@app.command("play")
+@app.command("play", rich_help_panel="Playback")
 def play_cmd(
     query: str = typer.Argument("", help="Track/album/playlist URI, URL, ID, or search query. Empty = resume."),
     position_ms: int = typer.Option(0, "--position-ms", help="Start position in ms."),
@@ -1701,7 +1702,7 @@ def play_cmd(
     _out.print(f"[green]Playing:[/] {name}")
 
 
-@app.command("pause")
+@app.command("pause", rich_help_panel="Playback")
 def pause_cmd() -> None:
     """Pause playback."""
     sp = _get_spotify()
@@ -1710,7 +1711,7 @@ def pause_cmd() -> None:
     _out.print("[yellow]Playback paused.[/]")
 
 
-@app.command("resume")
+@app.command("resume", rich_help_panel="Playback")
 def resume_cmd() -> None:
     """Resume playback (alias for play without args)."""
     sp = _get_spotify()
@@ -1719,7 +1720,7 @@ def resume_cmd() -> None:
     _out.print("[green]Playback resumed.[/]")
 
 
-@app.command("stop")
+@app.command("stop", rich_help_panel="Playback")
 def stop_cmd() -> None:
     """Stop playback. (Implemented as pause — Spotify has no separate stop endpoint.)"""
     sp = _get_spotify()
@@ -1728,7 +1729,7 @@ def stop_cmd() -> None:
     _out.print("[yellow]Playback stopped (paused). Note: Spotify has no true stop endpoint.[/]")
 
 
-@app.command("next")
+@app.command("next", rich_help_panel="Playback")
 def next_cmd() -> None:
     """Skip to next track."""
     sp = _get_spotify()
@@ -1737,7 +1738,7 @@ def next_cmd() -> None:
     _out.print("[green]Skipped to next.[/]")
 
 
-@app.command("previous")
+@app.command("previous", rich_help_panel="Playback")
 def previous_cmd() -> None:
     """Skip to previous track."""
     sp = _get_spotify()
@@ -1750,7 +1751,7 @@ def previous_cmd() -> None:
 app.command("prev", hidden=True)(previous_cmd)
 
 
-@app.command("seek")
+@app.command("seek", rich_help_panel="Playback")
 def seek_cmd(
     position: str = typer.Argument(..., help="Position: ms, mm:ss, +10s, -15s."),
 ) -> None:
@@ -1765,7 +1766,7 @@ def seek_cmd(
     _out.print(f"[green]Seeked to {_format_ms(target)}[/]")
 
 
-@app.command("volume")
+@app.command("volume", rich_help_panel="Playback")
 def volume_cmd(
     percent: int = typer.Argument(..., help="Volume percent 0-100."),
 ) -> None:
@@ -1782,7 +1783,7 @@ def volume_cmd(
 app.command("vol", hidden=True)(volume_cmd)
 
 
-@app.command("repeat")
+@app.command("repeat", rich_help_panel="Playback")
 def repeat_cmd(
     mode: str = typer.Argument(..., help="Repeat mode: off, track, context."),
 ) -> None:
@@ -1795,7 +1796,7 @@ def repeat_cmd(
     _out.print(f"[green]Repeat: {mode}[/]")
 
 
-@app.command("shuffle")
+@app.command("shuffle", rich_help_panel="Playback")
 def shuffle_cmd(
     mode: str = typer.Argument(..., help="Shuffle: on, off, toggle."),
 ) -> None:
@@ -1897,7 +1898,7 @@ queue_app.command("rm", hidden=True)(queue_remove)
 # SEARCH
 # ===========================================================================
 
-@app.command("search")
+@app.command("search", rich_help_panel="Browse & Search")
 def search_cmd(
     query: str = typer.Argument(..., help="Search query."),
     type_filter: str = typer.Option("track", "--type", "-t", help="Result types: track, album, artist, playlist (comma-separated)."),
@@ -2757,7 +2758,7 @@ def library_unsave(query: str = typer.Argument(..., help="Track or album to unsa
 # RECENT / TOP
 # ===========================================================================
 
-@app.command("recent")
+@app.command("recent", rich_help_panel="Discovery")
 def recent_cmd() -> None:
     """Show recently played tracks."""
     sp = _get_spotify()
@@ -2926,7 +2927,7 @@ def mood_search(mood: str = typer.Argument(..., help="Mood: chill, focus, happy,
     _print_output("mood search", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: all_playlists)
 
 
-@app.command("discover")
+@app.command("discover", rich_help_panel="Discovery")
 def discover_cmd() -> None:
     """Discovery helper: shows a mix of your top tracks and artists for exploration.
 
@@ -2968,7 +2969,7 @@ def discover_cmd() -> None:
     _print_output("discover", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: {"top_tracks": tracks, "discovered": fresh})
 
 
-@app.command("radio")
+@app.command("radio", rich_help_panel="Discovery")
 def radio_cmd(
     query: str = typer.Argument(..., help="Track or artist to build radio from."),
 ) -> None:
