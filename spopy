@@ -404,6 +404,7 @@ def _save_pkce_state(auth_manager: SpotifyOAuth | SpotifyPKCE, state: str) -> No
     if isinstance(auth_manager, SpotifyPKCE) and hasattr(auth_manager, "_code_verifier"):
         data["code_verifier"] = auth_manager._code_verifier
     p = _pkce_state_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data))
     try:
         p.chmod(0o600)
