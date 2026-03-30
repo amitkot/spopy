@@ -41,7 +41,7 @@ from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyOAuth, SpotifyPKCE
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -68,6 +68,9 @@ DEFAULT_SCOPES = " ".join([
 ])
 
 DEFAULT_CACHE_PATH = ".spopy_cache"
+DEFAULT_CLIENT_ID = "77e240d32097423da4d574b772c721a4"
+DEFAULT_REDIRECT_URI_PKCE = "https://spopy.amitkot.com/callback"
+DEFAULT_REDIRECT_URI_LOCAL = "http://127.0.0.1:8888/callback"
 DEFAULT_MARKET = ""
 DEFAULT_TIMEOUT = 15
 DEFAULT_RETRIES = 3
@@ -242,7 +245,14 @@ class CLIState:
     def auto_yes(self) -> bool:
         return self.flag_yes
 
+    @property
+    def uses_pkce(self) -> bool:
+        """PKCE mode when no client secret is provided."""
+        return not self.client_secret
+
     def auth_configured(self) -> bool:
+        if self.uses_pkce:
+            return bool(self.client_id and self.redirect_uri)
         return bool(self.client_id and self.client_secret and self.redirect_uri)
 
 
@@ -264,9 +274,11 @@ def _load_env() -> None:
     SPOTIFY_* vars are primary. SPOTIPY_* accepted as fallbacks for the
     spotipy library's native env vars.
     """
-    _state.client_id = _env("SPOTIFY_CLIENT_ID", "SPOTIPY_CLIENT_ID")
+    _state.client_id = _env("SPOTIFY_CLIENT_ID", "SPOTIPY_CLIENT_ID", default=DEFAULT_CLIENT_ID)
     _state.client_secret = _env("SPOTIFY_CLIENT_SECRET", "SPOTIPY_CLIENT_SECRET")
-    _state.redirect_uri = _env("SPOTIFY_REDIRECT_URI", "SPOTIPY_REDIRECT_URI")
+    # Default redirect URI depends on whether we're in PKCE or OAuth mode
+    default_redirect = DEFAULT_REDIRECT_URI_LOCAL if _state.client_secret else DEFAULT_REDIRECT_URI_PKCE
+    _state.redirect_uri = _env("SPOTIFY_REDIRECT_URI", "SPOTIPY_REDIRECT_URI", default=default_redirect)
     _state.cache_path = _env("SPOTIFY_CACHE_PATH", "SPOTIPY_CACHE_PATH", default=DEFAULT_CACHE_PATH)
     _state.username = _env("SPOTIFY_USERNAME", "SPOTIPY_USERNAME")
     _state.scopes = _env("SPOTIFY_SCOPES", default=DEFAULT_SCOPES)
@@ -288,21 +300,31 @@ def _load_env() -> None:
 # Auth manager helpers
 # ---------------------------------------------------------------------------
 
-def _build_oauth(open_browser: bool = False) -> SpotifyOAuth:
-    """Build a SpotifyOAuth instance from the current state."""
+def _build_auth_manager(open_browser: bool = False) -> SpotifyOAuth | SpotifyPKCE:
+    """Build auth manager: SpotifyPKCE (default) or SpotifyOAuth (if secret set)."""
     if not _state.auth_configured():
         missing = []
         if not _state.client_id:
             missing.append("SPOTIFY_CLIENT_ID")
-        if not _state.client_secret:
+        if not _state.uses_pkce and not _state.client_secret:
             missing.append("SPOTIFY_CLIENT_SECRET")
         if not _state.redirect_uri:
             missing.append("SPOTIFY_REDIRECT_URI")
         _die(
             f"Missing required auth env var(s): {', '.join(missing)}",
             ExitCode.AUTH_CONFIG_ERROR,
-            hint="Export the variables or add them to your Dokku config.",
         )
+    if _state.uses_pkce:
+        logger.debug("Using PKCE auth flow")
+        return SpotifyPKCE(
+            client_id=_state.client_id,
+            redirect_uri=_state.redirect_uri,
+            scope=_state.scopes,
+            cache_path=_state.cache_path,
+            open_browser=open_browser,
+            username=_state.username or None,
+        )
+    logger.debug("Using OAuth auth flow (client secret provided)")
     return SpotifyOAuth(
         client_id=_state.client_id,
         client_secret=_state.client_secret,
@@ -316,7 +338,7 @@ def _build_oauth(open_browser: bool = False) -> SpotifyOAuth:
 
 def _get_spotify(require_auth: bool = True) -> spotipy.Spotify:
     """Return an authenticated Spotify client, refreshing tokens as needed."""
-    oauth = _build_oauth(open_browser=False)
+    oauth = _build_auth_manager(open_browser=False)
     token_info = oauth.get_cached_token()
     if token_info is None and require_auth:
         _die(
@@ -903,59 +925,47 @@ def _global_options(
 
 @auth_app.command("setup-guide")
 def auth_setup_guide() -> None:
-    """Print step-by-step instructions for creating a Spotify app and configuring the CLI."""
+    """Print step-by-step instructions for setting up spopy."""
     guide = """\
-[bold]Spotify CLI — First-Time Setup Guide[/]
+[bold]spopy — Setup Guide[/]
 
-[bold]Step 1: Create a Spotify App[/]
+[bold]Quick Start (zero config)[/]
+
+  spopy includes a built-in Spotify app. Just run:
+
+  [green]spopy auth login[/]
+
+  Your browser will open, you'll approve access, and you're done.
+  For remote/headless servers, use:
+
+  [green]spopy auth url[/]       → open the URL in a browser elsewhere
+                        → after approving, copy the command from the page
+  [green]spopy auth callback-url '<paste>'[/]
+
+[bold]Advanced: Use your own Spotify app[/]
+
+  If you want your own app (e.g. for rate limit isolation):
 
   1. Go to [link=https://developer.spotify.com/dashboard]https://developer.spotify.com/dashboard[/link]
-  2. Log in with your Spotify account.
-  3. Click [bold]Create App[/].
-  4. Fill in:
-     • [bold]App name:[/]     anything (e.g. "My CLI")
-     • [bold]Description:[/]  anything
-     • [bold]Redirect URI:[/] [green]http://127.0.0.1:8888/callback[/]
-     • [bold]APIs:[/]         select [green]Web API[/]
-  5. Click [bold]Save[/].
-  6. Go to [bold]Settings[/] and note your [bold]Client ID[/] and [bold]Client Secret[/].
+  2. Create an app with redirect URI: [green]http://127.0.0.1:8888/callback[/]
+  3. Set environment variables:
 
-[bold]Step 2: Set environment variables[/]
+     [green]export SPOTIFY_CLIENT_ID='your_client_id'[/]
+     [green]export SPOTIFY_CLIENT_SECRET='your_client_secret'[/]
+     [green]export SPOTIFY_REDIRECT_URI='http://127.0.0.1:8888/callback'[/]
 
-  [green]export SPOTIFY_CLIENT_ID='your_client_id'[/]
-  [green]export SPOTIFY_CLIENT_SECRET='your_client_secret'[/]
-  [green]export SPOTIFY_REDIRECT_URI='http://127.0.0.1:8888/callback'[/]
+  Setting SPOTIFY_CLIENT_SECRET switches spopy to the classic OAuth flow.
 
-  Tip: Add these to your shell profile (~/.bashrc, ~/.zshrc) or use
-  Dokku config:set for gateway deployment.
+[bold]Transfer token to a remote server[/]
 
-[bold]Step 3: Authenticate[/]
+  On local:   [green]spopy auth login[/]
+  On local:   [green]spopy auth export-token-info --raw --yes > token.json[/]
+  On remote:  [green]spopy auth import-token-info token.json[/]
 
-  [bold]Option A — Local machine with a browser:[/]
-    [green]spopy auth login[/]
-
-  [bold]Option B — Remote gateway (no browser):[/]
-    [green]spopy auth url[/]
-    Open the printed URL in a browser on another machine.
-    After approving, the browser shows an error page — this is expected.
-    Copy the full URL from the address bar, then:
-    [green]spopy auth callback-url '<paste_the_full_url>'[/]
-
-  [bold]Option C — Transfer token from local to gateway:[/]
-    On local:  [green]spopy auth login[/]
-    On local:  [green]spopy auth export-token-info --raw --yes > token.json[/]
-    Copy token.json to the gateway, then:
-    On gateway: [green]spopy auth import-token-info token.json[/]
-
-[bold]Step 4: Verify[/]
+[bold]Verify[/]
 
   [green]spopy auth status[/]
-  [green]spopy doctor[/]
-  [green]spopy devices list[/]
-
-[dim]Important: The redirect URI in your Spotify app settings MUST exactly match
-SPOTIFY_REDIRECT_URI. Use http://127.0.0.1 (not localhost).
-Also accepts SPOTIPY_* env vars for compatibility.[/]"""
+  [green]spopy doctor[/]"""
     _out.print(guide)
 
 
@@ -984,8 +994,10 @@ def auth_status() -> None:
         table = Table(title="Auth Status", show_lines=True)
         table.add_column("Property", style="bold")
         table.add_column("Value")
+        table.add_row("Auth Flow", "[cyan]PKCE[/] (zero-config)" if _state.uses_pkce else "[cyan]OAuth[/] (custom app)")
         table.add_row("Client ID", _mask_token(_state.client_id, 4) if _state.client_id else "[red]NOT SET[/]")
-        table.add_row("Client Secret", "[green]set[/]" if _state.client_secret else "[red]NOT SET[/]")
+        secret_display = "[dim]not needed (PKCE)[/]" if _state.uses_pkce else ("[green]set[/]" if _state.client_secret else "[red]NOT SET[/]")
+        table.add_row("Client Secret", secret_display)
         table.add_row("Redirect URI", _state.redirect_uri or "[red]NOT SET[/]")
         table.add_row("Cache Path", str(cache_path))
         table.add_row("Cache Exists", "[green]yes[/]" if cache_exists else "[yellow]no[/]")
@@ -998,8 +1010,9 @@ def auth_status() -> None:
         _out.print(table)
 
     def _plain() -> None:
+        print(f"auth_flow\t{'pkce' if _state.uses_pkce else 'oauth'}")
         print(f"client_id\t{_mask_token(_state.client_id, 4) if _state.client_id else 'NOT SET'}")
-        print(f"client_secret\t{'set' if _state.client_secret else 'NOT SET'}")
+        print(f"client_secret\t{'not needed' if _state.uses_pkce else ('set' if _state.client_secret else 'NOT SET')}")
         print(f"redirect_uri\t{_state.redirect_uri or 'NOT SET'}")
         print(f"cache_path\t{cache_path}")
         print(f"cache_exists\t{cache_exists}")
@@ -1011,6 +1024,7 @@ def auth_status() -> None:
 
     def _data() -> dict[str, Any]:
         d: dict[str, Any] = {
+            "auth_flow": "pkce" if _state.uses_pkce else "oauth",
             "client_id_set": bool(_state.client_id),
             "client_secret_set": bool(_state.client_secret),
             "redirect_uri": _state.redirect_uri,
@@ -1033,7 +1047,7 @@ def auth_url(
 ) -> None:
     """Generate and print the authorization URL."""
     import secrets
-    oauth = _build_oauth(open_browser=False)
+    oauth = _build_auth_manager(open_browser=False)
     state_val = secrets.token_urlsafe(16)
     url = oauth.get_authorize_url(state=state_val)
 
@@ -1055,15 +1069,14 @@ def auth_url(
         _out.print(f"[dim]State:[/] {state_val}")
         _out.print("\n[bold]Next steps:[/]")
         _out.print("  1. Open the URL above in a browser.")
-        _out.print("  2. If this is your first time, Spotify will ask you to approve the app.")
-        _out.print("     If you already approved it, it skips straight to step 3.")
-        _out.print('  3. Your browser will redirect to a page that shows [yellow]"Unable to connect"[/]')
-        _out.print("     or a similar error. [bold]This is expected![/] The redirect URL in your")
-        _out.print("     browser's address bar contains the authorization code we need.")
-        _out.print("  4. Copy the [bold]entire URL[/] from the address bar (it starts with")
-        _out.print(f"     [dim]{_state.redirect_uri}?code=...[/])")
-        _out.print("  5. Run:")
-        _out.print("     [green]spopy auth callback-url '<paste_the_full_url>'[/]")
+        _out.print("  2. Approve the app (first time only).")
+        if _state.uses_pkce:
+            _out.print("  3. You'll be redirected to a page with a ready-to-paste command.")
+            _out.print("  4. Copy the command and run it in your terminal.")
+        else:
+            _out.print('  3. Your browser will show an [yellow]"Unable to connect"[/] error.')
+            _out.print("     [bold]This is expected.[/] Copy the [bold]entire URL[/] from the address bar.")
+            _out.print("  4. Run: [green]spopy auth callback-url '<paste_the_full_url>'[/]")
 
 
 @auth_app.command("login")
@@ -1072,7 +1085,7 @@ def auth_login(
 ) -> None:
     """Log in interactively (local bootstrap). Prints URL for gateway use."""
     should_open = open_browser and _state.open_browser
-    oauth = _build_oauth(open_browser=False)
+    oauth = _build_auth_manager(open_browser=False)
     url = oauth.get_authorize_url()
 
     if should_open:
@@ -1087,16 +1100,22 @@ def auth_login(
     if not should_open:
         _out.print("[bold]Authorization URL:[/]\n")
         print(url)
-        _out.print("\n[bold]No browser mode.[/] Open the URL above in a browser.")
-        _out.print('After approving (or if already approved), your browser will show an [yellow]"Unable to')
-        _out.print('connect"[/] error page. [bold]This is expected.[/]')
-        _out.print("Copy the [bold]entire URL[/] from the address bar, then run one of:")
-        _out.print("  [green]spopy auth callback-url '<paste_the_full_url>'[/]")
-        _out.print("  [green]spopy auth code '<just_the_code_param>'[/]")
+        if _state.uses_pkce:
+            _out.print("\n[bold]No browser mode.[/] Open the URL above in a browser.")
+            _out.print("After approving, you'll see a page with a ready-to-paste command.")
+            _out.print("Copy it and run it here.")
+        else:
+            _out.print("\n[bold]No browser mode.[/] Open the URL above in a browser.")
+            _out.print('After approving, your browser will show an [yellow]"Unable to connect"[/] error.')
+            _out.print("[bold]This is expected.[/] Copy the URL from the address bar, then run:")
+            _out.print("  [green]spopy auth callback-url '<paste_the_full_url>'[/]")
         return
 
-    _out.print("\nAfter authorizing, your browser will show an error page — [bold]this is expected.[/]")
-    _out.print("Copy the [bold]entire URL[/] from the address bar and paste it below.")
+    if _state.uses_pkce:
+        _out.print("\nAfter approving, you'll see a page with a command to copy and paste below.")
+    else:
+        _out.print("\nAfter authorizing, your browser will show an error page — [bold]this is expected.[/]")
+        _out.print("Copy the [bold]entire URL[/] from the address bar and paste it below.")
     redirect_response = typer.prompt("Redirect URL")
     try:
         code = oauth.parse_response_code(redirect_response)
@@ -1122,7 +1141,7 @@ def auth_callback_url(
     url: str = typer.Argument(..., help="Full redirected callback URL."),
 ) -> None:
     """Exchange a callback URL (pasted from the browser) for tokens."""
-    oauth = _build_oauth(open_browser=False)
+    oauth = _build_auth_manager(open_browser=False)
     try:
         code = oauth.parse_response_code(url)
         if not code or code == url:
@@ -1174,7 +1193,7 @@ def auth_code_cmd(
         if expected and state != expected:
             _console.print("[yellow]Warning: state mismatch.[/]")
 
-    oauth = _build_oauth(open_browser=False)
+    oauth = _build_auth_manager(open_browser=False)
     try:
         token_info = oauth.get_access_token(code, check_cache=False)
         if isinstance(token_info, str):
@@ -1209,7 +1228,7 @@ def auth_import_token_info(
     except json.JSONDecodeError as exc:
         _die(f"Invalid JSON: {exc}", ExitCode.INVALID_INPUT)
 
-    required = ["access_token", "refresh_token", "token_type"]
+    required = ["access_token", "token_type"]
     missing = [k for k in required if k not in token_info]
     if missing:
         _die(f"Missing required fields: {', '.join(missing)}", ExitCode.INVALID_INPUT)
@@ -1312,13 +1331,16 @@ def doctor() -> None:
     """Diagnose auth, config, connectivity, and playback readiness."""
     checks: list[tuple[str, str, str]] = []  # (label, status_icon, detail)
 
-    # 1. Env vars
-    for var in ("SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", "SPOTIFY_REDIRECT_URI"):
-        val = os.environ.get(var, "")
-        if val:
-            checks.append((var, "[green]OK[/]", "Set"))
-        else:
-            checks.append((var, "[red]MISSING[/]", f"Export {var}"))
+    # 1. Auth flow and env vars
+    flow = "PKCE (zero-config)" if _state.uses_pkce else "OAuth (custom app)"
+    checks.append(("Auth flow", "[green]OK[/]", flow))
+    checks.append(("Client ID", "[green]OK[/]", _mask_token(_state.client_id, 4) if _state.client_id else "[red]MISSING[/]"))
+    if _state.uses_pkce:
+        checks.append(("Client Secret", "[green]OK[/]", "Not needed (PKCE)"))
+    else:
+        val = os.environ.get("SPOTIFY_CLIENT_SECRET", "")
+        checks.append(("Client Secret", "[green]OK[/]" if val else "[red]MISSING[/]", "Set" if val else "Export SPOTIFY_CLIENT_SECRET"))
+    checks.append(("Redirect URI", "[green]OK[/]" if _state.redirect_uri else "[red]MISSING[/]", _state.redirect_uri or "Not set"))
 
     # 2. Cache path
     cp = Path(_state.cache_path)
