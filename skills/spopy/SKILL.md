@@ -2,6 +2,7 @@
 name: spopy
 description: Control Spotify from the terminal — play, pause, search, queue, playlists
 globs:
+  - "spopy.py"
   - "spopy"
 ---
 

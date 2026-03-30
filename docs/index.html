@@ -60,9 +60,9 @@
     </div>
 
     <div class="install" onclick="copyInstall()">
-        <span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash
+        <span class="prompt">$ </span>uv tool install spopy
     </div>
-    <p class="install-hint">Click to copy. Requires <a href="https://docs.astral.sh/uv/">uv</a>. Or: <code>pip install uv</code></p>
+    <p class="install-hint">Click to copy. Requires <a href="https://docs.astral.sh/uv/">uv</a>. Also: <code>pipx install spopy</code></p>
 
     <div class="section">
         <h2>Get started</h2>
@@ -157,7 +157,7 @@
     <div class="toast" id="toast">Copied to clipboard</div>
     <script>
         function copyInstall() {
-            navigator.clipboard.writeText("curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash");
+            navigator.clipboard.writeText("uv tool install spopy");
             const toast = document.getElementById('toast');
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);

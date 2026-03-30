@@ -8,7 +8,7 @@ REPO="amitkot/spopy"
 BRANCH="main"
 INSTALL_DIR="${SPOTIFY_INSTALL_DIR:-$HOME/.local/bin}"
 BIN_NAME="spopy"
-URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/spopy"
+URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/spopy.py"
 
 info()  { printf '\033[0;34m%s\033[0m\n' "$*"; }
 ok()    { printf '\033[0;32m%s\033[0m\n' "$*"; }

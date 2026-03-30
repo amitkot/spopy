@@ -20,34 +20,31 @@ Designed for both local use and self-hosting on a remote gateway (Dokku, VPS, et
 
 ## Install
 
-**Requirements:** [uv](https://docs.astral.sh/uv/) (Python package runner)
+### PyPI (recommended)
 
-### One-liner
+```bash
+uv tool install spopy
+```
+
+Or with pipx:
+
+```bash
+pipx install spopy
+```
+
+### Script installer
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/install.sh | bash
 ```
 
-This checks for uv (installs it if missing), downloads `spopy` to `~/.local/bin/spopy`, and prints next steps.
-
-### Manual
+### Standalone script
 
 ```bash
-# Install uv if you don't have it
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Download the CLI
-curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/spopy -o ~/.local/bin/spopy
-chmod +x ~/.local/bin/spopy
+curl -fsSL https://raw.githubusercontent.com/amitkot/spopy/main/spopy.py -o ~/.local/bin/spopy && chmod +x ~/.local/bin/spopy
 ```
 
-Or clone the repo and run directly:
-
-```bash
-git clone https://github.com/amitkot/spopy.git
-cd spopy
-./spopy --help
-```
+The standalone script uses PEP 723 inline deps and runs with `uv run spopy.py`.
 
 ## Quick Start
 

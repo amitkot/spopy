@@ -4,5 +4,8 @@
 .spotify_cli_cache
 *.pyc
 __pycache__/
+dist/
+*.egg-info/
+.venv/
 token.json
 .env
