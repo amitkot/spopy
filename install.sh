@@ -49,8 +49,6 @@ if [[ ":$PATH:" != *":${INSTALL_DIR}:"* ]]; then
 fi
 
 ok ""
-ok "spopy installed! Next steps:"
-info "  1. Create a Spotify app:  ${BIN_NAME} auth setup-guide"
-info "  2. Set env vars:          export SPOTIFY_CLIENT_ID='...'"
-info "  3. Log in:                ${BIN_NAME} auth login"
-info "  4. Check status:          ${BIN_NAME} doctor"
+ok "spopy installed! Get started:"
+info "  ${BIN_NAME} auth login"
+info "  ${BIN_NAME} play 'bohemian rhapsody'"

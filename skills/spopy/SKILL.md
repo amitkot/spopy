@@ -50,4 +50,4 @@ Accepts: Spotify URI, URL, ID, or search query.
 
 Exit codes: 0 ok, 2 bad input, 3 auth error, 4 API error, 5 rate limit.
 
-Auth env vars: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`.
+Auth is zero-config. If exit code 3, run `spopy auth login`.

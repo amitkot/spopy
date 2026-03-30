@@ -49,69 +49,23 @@ cd spopy
 ./spopy --help
 ```
 
-## Spotify App Setup
-
-Before using the CLI, you need a Spotify Developer app. This is a one-time setup.
-
-### 1. Create the app
-
-1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
-2. Log in with your Spotify account
-3. Click **Create App**
-4. Fill in:
-   - **App name:** anything (e.g. "My CLI")
-   - **App description:** anything
-   - **Redirect URI:** `http://127.0.0.1:8888/callback`
-   - **Which API/SDKs:** select **Web API**
-5. Click **Save**
-6. Go to **Settings** and note your **Client ID** and **Client Secret**
-
-> **Important:** The redirect URI must be exactly `http://127.0.0.1:8888/callback` — not `localhost`, not `https`.
-
-### 2. Set environment variables
-
-```bash
-export SPOTIFY_CLIENT_ID='your_client_id'
-export SPOTIFY_CLIENT_SECRET='your_client_secret'
-export SPOTIFY_REDIRECT_URI='http://127.0.0.1:8888/callback'
-```
-
-Add these to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist them.
-
-For Dokku deployments:
-
-```bash
-dokku config:set myapp SPOTIFY_CLIENT_ID='...' SPOTIFY_CLIENT_SECRET='...' SPOTIFY_REDIRECT_URI='...'
-```
-
-### 3. Verify setup
-
-```bash
-spopy auth status
-spopy doctor
-```
-
-The CLI also has a built-in guide: `spopy auth setup-guide`
-
 ## Quick Start
 
-### Local machine (has a browser)
+No setup required — spopy includes a built-in Spotify app.
 
 ```bash
 spopy auth login
-# Browser opens → approve → copy the redirect URL → paste when prompted
 spopy status
 spopy play "bohemian rhapsody"
 ```
 
-### Remote gateway (no browser)
+### Remote / headless server
 
 ```bash
 spopy auth url
-# Copy the printed URL → open in a browser on another machine
-# Approve → browser shows "Unable to connect" → copy the URL from the address bar
-spopy auth callback-url 'http://127.0.0.1:8888/callback?code=XXXXX&state=YYYYY'
-spopy status
+# Open the printed URL in a browser on another machine
+# After approving, copy the command from the callback page
+spopy auth callback-url '<paste_the_url>'
 ```
 
 ### Transfer token from local to remote
@@ -127,17 +81,19 @@ spopy auth import-token-info token.json
 
 ## Configuration
 
-All configuration is via environment variables.
+All configuration is via environment variables. **None are required** — spopy works out of the box with PKCE auth.
 
-### Required
+### Auth (all optional)
 
-| Variable | Description |
-|---|---|
-| `SPOTIFY_CLIENT_ID` | Spotify app client ID |
-| `SPOTIFY_CLIENT_SECRET` | Spotify app client secret |
-| `SPOTIFY_REDIRECT_URI` | Redirect URI (must match app settings) |
+| Variable | Default | Description |
+|---|---|---|
+| `SPOTIFY_CLIENT_ID` | (built-in) | Override with your own Spotify app |
+| `SPOTIFY_CLIENT_SECRET` | | Set to switch to classic OAuth flow |
+| `SPOTIFY_REDIRECT_URI` | (auto) | Override redirect URI |
 
-### Optional
+> Setting `SPOTIFY_CLIENT_SECRET` switches spopy to the classic OAuth flow with your own Spotify app. See `spopy auth setup-guide` for details.
+
+### Runtime (all optional)
 
 | Variable | Default | Description |
 |---|---|---|
