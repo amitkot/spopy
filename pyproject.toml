@@ -6,7 +6,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 authors = [
-    { name = "Amit Kot" },
+    { name = "Amit Kotlovski" },
 ]
 keywords = ["spotify", "cli", "music", "terminal", "spotipy"]
 classifiers = [
