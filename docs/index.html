@@ -34,6 +34,7 @@
         .commands { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 0.85em; line-height: 1.8; overflow-x: auto; }
         .commands .comment { color: var(--muted); }
         .commands .cmd { color: var(--green); }
+        .commands .sep { color: #484f58; }
 
         .footer { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.85em; border-top: 1px solid var(--border); max-width: 700px; margin: 0 auto; }
         .footer a { color: var(--muted); }
@@ -115,23 +116,23 @@
         <h2>Commands</h2>
         <div class="commands">
             <div><span class="comment"># Playback</span></div>
-            <div><span class="cmd">spopy play | pause | resume | next | previous</span></div>
-            <div><span class="cmd">spopy seek 1:30 | volume 50 | shuffle toggle | repeat track</span></div>
+            <div><span class="cmd">spopy play</span> <span class="sep">|</span> <span class="cmd">pause</span> <span class="sep">|</span> <span class="cmd">resume</span> <span class="sep">|</span> <span class="cmd">next</span> <span class="sep">|</span> <span class="cmd">previous</span></div>
+            <div><span class="cmd">spopy seek 1:30</span> <span class="sep">|</span> <span class="cmd">volume 50</span> <span class="sep">|</span> <span class="cmd">shuffle toggle</span> <span class="sep">|</span> <span class="cmd">repeat track</span></div>
             <div><br></div>
             <div><span class="comment"># Browse</span></div>
             <div><span class="cmd">spopy search "query" --type track,album,artist,playlist</span></div>
-            <div><span class="cmd">spopy track | album | artist | playlist show "query"</span></div>
+            <div><span class="cmd">spopy track</span> <span class="sep">|</span> <span class="cmd">album</span> <span class="sep">|</span> <span class="cmd">artist</span> <span class="sep">|</span> <span class="cmd">playlist</span> <span class="cmd">show "query"</span></div>
             <div><br></div>
             <div><span class="comment"># Queue &amp; playlists</span></div>
-            <div><span class="cmd">spopy queue list | add "song"</span></div>
-            <div><span class="cmd">spopy playlist list | create | add | remove | clear</span></div>
+            <div><span class="cmd">spopy queue list</span> <span class="sep">|</span> <span class="cmd">add "song"</span></div>
+            <div><span class="cmd">spopy playlist list</span> <span class="sep">|</span> <span class="cmd">create</span> <span class="sep">|</span> <span class="cmd">add</span> <span class="sep">|</span> <span class="cmd">remove</span> <span class="sep">|</span> <span class="cmd">clear</span></div>
             <div><br></div>
             <div><span class="comment"># Library &amp; discovery</span></div>
-            <div><span class="cmd">spopy library tracks | albums | save | unsave</span></div>
-            <div><span class="cmd">spopy recent | top tracks | top artists | discover</span></div>
+            <div><span class="cmd">spopy library tracks</span> <span class="sep">|</span> <span class="cmd">albums</span> <span class="sep">|</span> <span class="cmd">save</span> <span class="sep">|</span> <span class="cmd">unsave</span></div>
+            <div><span class="cmd">spopy recent</span> <span class="sep">|</span> <span class="cmd">top tracks</span> <span class="sep">|</span> <span class="cmd">top artists</span> <span class="sep">|</span> <span class="cmd">discover</span></div>
             <div><br></div>
             <div><span class="comment"># Status &amp; diagnostics</span></div>
-            <div><span class="cmd">spopy status | devices list | doctor</span></div>
+            <div><span class="cmd">spopy status</span> <span class="sep">|</span> <span class="cmd">devices list</span> <span class="sep">|</span> <span class="cmd">doctor</span></div>
         </div>
     </div>
 
