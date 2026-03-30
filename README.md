@@ -1,5 +1,9 @@
 # spopy
 
+[![PyPI](https://img.shields.io/pypi/v/spopy)](https://pypi.org/project/spopy/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/pypi/pyversions/spopy)](https://pypi.org/project/spopy/)
+
 A production-quality Spotify CLI in a single Python file. Runs anywhere with [uv](https://docs.astral.sh/uv/) — no install step, no virtualenv, no package manager.
 
 Designed for both local use and self-hosting on a remote gateway (Dokku, VPS, etc.).
