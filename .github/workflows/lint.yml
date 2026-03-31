@@ -11,13 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uvx ruff check spopy.py
-      - run: uvx ruff format --check spopy.py
+      - run: uv sync --dev
+      - run: uv run ruff check spopy.py
+      - run: uv run ruff format --check spopy.py
 
   ty:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync
+      - run: uv sync --dev
       - run: uv run ty check spopy.py

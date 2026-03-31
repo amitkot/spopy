@@ -59,3 +59,9 @@ python-version = "3.12"
 [tool.ty.rules]
 invalid-assignment = "ignore"   # SpotifyPKCE._code_verifier private attr access
 unresolved-attribute = "ignore" # SpotifyPKCE._code_verifier private attr access
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.8",
+    "ty>=0.0.26",
+]
