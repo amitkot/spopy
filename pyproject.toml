@@ -1,6 +1,6 @@
 [project]
 name = "spopy"
-version = "0.2.0"
+version = "0.3.0"
 description = "A production-quality Spotify CLI in a single Python file"
 readme = "README.md"
 license = "MIT"

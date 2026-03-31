@@ -48,7 +48,7 @@ from spotipy.oauth2 import SpotifyOAuth, SpotifyPKCE
 # ---------------------------------------------------------------------------
 
 APP_NAME = "spopy"
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 DEFAULT_SCOPES = " ".join([
     "user-read-playback-state",
@@ -608,6 +608,14 @@ def _select_device(sp: spotipy.Spotify) -> str | None:
         return _state.default_device_id
     if _state.default_device_name:
         return _resolve_device_by_name(sp, _state.default_device_name)
+
+    # Auto-select if exactly one device is available
+    devs = _api_call(sp.devices)
+    devices = devs.get("devices", []) if devs else []
+    if len(devices) == 1:
+        dev_id = devices[0]["id"]
+        logger.debug("Auto-selected sole available device: %s (%s)", devices[0].get("name"), dev_id)
+        return dev_id
 
     return None
 
@@ -3016,7 +3024,52 @@ def radio_cmd(
 # MAIN
 # ===========================================================================
 
+def _reorder_argv() -> None:
+    """Hoist global options to the front of sys.argv.
+
+    Typer/Click requires parent-level options (--json, --device-id, etc.)
+    to appear before the subcommand name.  Users and agents naturally write
+    them after (e.g. ``spopy devices list --json``).  This pre-processing
+    step moves recognised global options to the front so they work in any
+    position.
+    """
+    global_flags = {
+        "--json", "--plain", "--debug", "--verbose", "--no-color",
+        "--yes", "-y", "--exact", "--interactive", "-i",
+    }
+    global_value_opts = {
+        "--device-id", "--device-name", "--market", "--limit", "--offset",
+    }
+
+    argv = sys.argv[1:]
+    if not argv:
+        return
+
+    hoisted: list[str] = []
+    remaining: list[str] = []
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg in global_flags:
+            hoisted.append(arg)
+            i += 1
+        elif arg in global_value_opts and i + 1 < len(argv):
+            hoisted.append(arg)
+            hoisted.append(argv[i + 1])
+            i += 2
+        elif any(arg.startswith(opt + "=") for opt in global_value_opts):
+            hoisted.append(arg)
+            i += 1
+        else:
+            remaining.append(arg)
+            i += 1
+
+    if hoisted:
+        sys.argv = [sys.argv[0]] + hoisted + remaining
+
+
 if __name__ == "__main__":
+    _reorder_argv()
     app()
 
 
