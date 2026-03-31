@@ -15,11 +15,16 @@ Use semantic versioning.
 
 ## Releasing
 
-Publishing to PyPI is automated via GitHub Actions. To release:
+Releases are fully automated. To release a new version:
 
-1. Bump version in all three files
+1. Bump version in all three files (VERSION, pyproject.toml, spopy.py)
 2. Update CHANGELOG.md
-3. Commit and push to main
-4. Tag the commit: `git tag v0.X.Y`
-5. Push the tag: `git push origin v0.X.Y`
-6. The `publish.yml` workflow builds and publishes to PyPI automatically
+3. Merge to main
+
+On merge, CI auto-creates a `vX.Y.Z` git tag from the VERSION file,
+which triggers the publish workflow to build and push to PyPI.
+
+## Linting
+
+CI runs ruff (check + format) and ty (type check) on all PRs.
+Pre-commit config is available for local use: `pre-commit install`.
