@@ -16,17 +16,18 @@ operations with honest handling of unsupported endpoints.
 
 See: spopy --help
 """
+
 from __future__ import annotations
 
 import json
 import logging
-import warnings
 import os
 import re
 import sys
 import time
+import warnings
 import webbrowser
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import IntEnum
 from pathlib import Path
 from typing import Any, NoReturn
@@ -40,7 +41,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 from spotipy.oauth2 import SpotifyOAuth, SpotifyPKCE
 
 # ---------------------------------------------------------------------------
@@ -50,22 +50,24 @@ from spotipy.oauth2 import SpotifyOAuth, SpotifyPKCE
 APP_NAME = "spopy"
 __version__ = "0.3.0"
 
-DEFAULT_SCOPES = " ".join([
-    "user-read-playback-state",
-    "user-read-currently-playing",
-    "user-modify-playback-state",
-    "playlist-read-private",
-    "playlist-read-collaborative",
-    "playlist-modify-private",
-    "playlist-modify-public",
-    "user-library-read",
-    "user-library-modify",
-    "user-top-read",
-    "user-read-recently-played",
-    "user-follow-read",
-    "user-follow-modify",
-    "user-read-private",
-])
+DEFAULT_SCOPES = " ".join(
+    [
+        "user-read-playback-state",
+        "user-read-currently-playing",
+        "user-modify-playback-state",
+        "playlist-read-private",
+        "playlist-read-collaborative",
+        "playlist-modify-private",
+        "playlist-modify-public",
+        "user-library-read",
+        "user-library-modify",
+        "user-top-read",
+        "user-read-recently-played",
+        "user-follow-read",
+        "user-follow-modify",
+        "user-read-private",
+    ]
+)
 
 DEFAULT_CACHE_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "spopy"
 DEFAULT_CACHE_PATH = str(DEFAULT_CACHE_DIR / "token_cache")
@@ -78,26 +80,132 @@ DEFAULT_RETRIES = 3
 DEFAULT_BACKOFF_FACTOR = 0.5
 
 WELL_KNOWN_GENRES = [
-    "acoustic", "afrobeat", "alt-rock", "alternative", "ambient", "anime",
-    "black-metal", "bluegrass", "blues", "bossanova", "brazil", "breakbeat",
-    "british", "cantopop", "chicago-house", "children", "chill", "classical",
-    "club", "comedy", "country", "dance", "dancehall", "death-metal",
-    "deep-house", "detroit-techno", "disco", "disney", "drum-and-bass", "dub",
-    "dubstep", "edm", "electro", "electronic", "emo", "folk", "forro", "french",
-    "funk", "garage", "german", "gospel", "goth", "grindcore", "groove",
-    "grunge", "guitar", "happy", "hard-rock", "hardcore", "hardstyle",
-    "heavy-metal", "hip-hop", "holidays", "honky-tonk", "house", "idm",
-    "indian", "indie", "indie-pop", "industrial", "iranian", "j-dance",
-    "j-idol", "j-pop", "j-rock", "jazz", "k-pop", "kids", "latin", "latino",
-    "malay", "mandopop", "metal", "metal-misc", "metalcore", "minimal-techno",
-    "movies", "mpb", "new-age", "new-release", "opera", "pagode", "party",
-    "philippines-opm", "piano", "pop", "pop-film", "post-dubstep", "power-pop",
-    "progressive-house", "psych-rock", "punk", "punk-rock", "r-n-b", "rainy-day",
-    "reggae", "reggaeton", "road-trip", "rock", "rock-n-roll", "rockabilly",
-    "romance", "sad", "salsa", "samba", "sertanejo", "show-tunes",
-    "singer-songwriter", "ska", "sleep", "songwriter", "soul", "soundtracks",
-    "spanish", "study", "summer", "swedish", "synth-pop", "tango", "techno",
-    "trance", "trip-hop", "turkish", "work-out", "world-music",
+    "acoustic",
+    "afrobeat",
+    "alt-rock",
+    "alternative",
+    "ambient",
+    "anime",
+    "black-metal",
+    "bluegrass",
+    "blues",
+    "bossanova",
+    "brazil",
+    "breakbeat",
+    "british",
+    "cantopop",
+    "chicago-house",
+    "children",
+    "chill",
+    "classical",
+    "club",
+    "comedy",
+    "country",
+    "dance",
+    "dancehall",
+    "death-metal",
+    "deep-house",
+    "detroit-techno",
+    "disco",
+    "disney",
+    "drum-and-bass",
+    "dub",
+    "dubstep",
+    "edm",
+    "electro",
+    "electronic",
+    "emo",
+    "folk",
+    "forro",
+    "french",
+    "funk",
+    "garage",
+    "german",
+    "gospel",
+    "goth",
+    "grindcore",
+    "groove",
+    "grunge",
+    "guitar",
+    "happy",
+    "hard-rock",
+    "hardcore",
+    "hardstyle",
+    "heavy-metal",
+    "hip-hop",
+    "holidays",
+    "honky-tonk",
+    "house",
+    "idm",
+    "indian",
+    "indie",
+    "indie-pop",
+    "industrial",
+    "iranian",
+    "j-dance",
+    "j-idol",
+    "j-pop",
+    "j-rock",
+    "jazz",
+    "k-pop",
+    "kids",
+    "latin",
+    "latino",
+    "malay",
+    "mandopop",
+    "metal",
+    "metal-misc",
+    "metalcore",
+    "minimal-techno",
+    "movies",
+    "mpb",
+    "new-age",
+    "new-release",
+    "opera",
+    "pagode",
+    "party",
+    "philippines-opm",
+    "piano",
+    "pop",
+    "pop-film",
+    "post-dubstep",
+    "power-pop",
+    "progressive-house",
+    "psych-rock",
+    "punk",
+    "punk-rock",
+    "r-n-b",
+    "rainy-day",
+    "reggae",
+    "reggaeton",
+    "road-trip",
+    "rock",
+    "rock-n-roll",
+    "rockabilly",
+    "romance",
+    "sad",
+    "salsa",
+    "samba",
+    "sertanejo",
+    "show-tunes",
+    "singer-songwriter",
+    "ska",
+    "sleep",
+    "songwriter",
+    "soul",
+    "soundtracks",
+    "spanish",
+    "study",
+    "summer",
+    "swedish",
+    "synth-pop",
+    "tango",
+    "techno",
+    "trance",
+    "trip-hop",
+    "turkish",
+    "work-out",
+    "world-music",
 ]
 
 MOOD_MAP: dict[str, list[str]] = {
@@ -115,6 +223,7 @@ MOOD_MAP: dict[str, list[str]] = {
 # ---------------------------------------------------------------------------
 # Exit codes
 # ---------------------------------------------------------------------------
+
 
 class ExitCode(IntEnum):
     SUCCESS = 0
@@ -164,6 +273,7 @@ def _die(msg: str, code: ExitCode = ExitCode.INTERNAL_ERROR, hint: str | None = 
 # Output mode
 # ---------------------------------------------------------------------------
 
+
 class OutputMode:
     RICH = "rich"
     PLAIN = "plain"
@@ -174,9 +284,11 @@ class OutputMode:
 # Global state (populated from callback/env before commands run)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class CLIState:
     """Runtime configuration loaded from env vars and CLI flags."""
+
     client_id: str = ""
     client_secret: str = ""
     redirect_uri: str = ""
@@ -301,6 +413,7 @@ def _load_env() -> None:
 # Auth manager helpers
 # ---------------------------------------------------------------------------
 
+
 def _build_auth_manager(open_browser: bool = False) -> SpotifyOAuth | SpotifyPKCE:
     """Build auth manager: SpotifyPKCE (default) or SpotifyOAuth (if secret set)."""
     if not _state.auth_configured():
@@ -371,6 +484,7 @@ def _mask_token(tok: str | None, show: int = 4) -> str:
 # Token cache helpers
 # ---------------------------------------------------------------------------
 
+
 def _read_cache() -> dict[str, Any] | None:
     """Read and return the cached token info, or None."""
     p = Path(_state.cache_path)
@@ -437,6 +551,7 @@ def _cleanup_pkce_state() -> None:
 # Retry wrapper
 # ---------------------------------------------------------------------------
 
+
 def _api_call(fn: Any, *args: Any, **kwargs: Any) -> Any:
     """Call a Spotify API function with retries and error handling."""
     last_exc: Exception | None = None
@@ -457,18 +572,22 @@ def _api_call(fn: Any, *args: Any, **kwargs: Any) -> Any:
                 _die(f"Not found (404): {exc.msg}", ExitCode.API_ERROR)
             if status == 429:
                 retry_after = int(exc.headers.get("Retry-After", "2")) if exc.headers else 2
-                logger.debug("Rate limited (429), retrying after %ds (attempt %d/%d)", retry_after, attempt + 1, _state.retries)
+                logger.debug(
+                    "Rate limited (429), retrying after %ds (attempt %d/%d)", retry_after, attempt + 1, _state.retries
+                )
                 time.sleep(retry_after)
                 continue
             if status >= 500:
-                wait = _state.backoff_factor * (2 ** attempt)
-                logger.debug("Server error %d, retrying in %.1fs (attempt %d/%d)", status, wait, attempt + 1, _state.retries)
+                wait = _state.backoff_factor * (2**attempt)
+                logger.debug(
+                    "Server error %d, retrying in %.1fs (attempt %d/%d)", status, wait, attempt + 1, _state.retries
+                )
                 time.sleep(wait)
                 continue
             _die(f"Spotify API error ({status}): {exc.msg}", ExitCode.API_ERROR)
         except Exception as exc:
             last_exc = exc
-            wait = _state.backoff_factor * (2 ** attempt)
+            wait = _state.backoff_factor * (2**attempt)
             logger.debug("Unexpected error: %s — retrying in %.1fs", exc, wait)
             time.sleep(wait)
     if last_exc:
@@ -482,13 +601,16 @@ def _api_call(fn: Any, *args: Any, **kwargs: Any) -> Any:
 # ---------------------------------------------------------------------------
 
 _URI_RE = re.compile(r"^spotify:(?P<type>track|album|artist|playlist|episode|show):(?P<id>[a-zA-Z0-9]+)$")
-_URL_RE = re.compile(r"https?://open\.spotify\.com/(?:intl-\w+/)?(?P<type>track|album|artist|playlist|episode|show)/(?P<id>[a-zA-Z0-9]+)")
+_URL_RE = re.compile(
+    r"https?://open\.spotify\.com/(?:intl-\w+/)?(?P<type>track|album|artist|playlist|episode|show)/(?P<id>[a-zA-Z0-9]+)"
+)
 _ID_RE = re.compile(r"^[a-zA-Z0-9]{22}$")
 
 
 @dataclass
 class SpotifyResource:
     """A resolved Spotify resource."""
+
     resource_type: str
     resource_id: str
     uri: str = ""
@@ -527,7 +649,9 @@ def _resolve_resource(
     if sp is None:
         sp = _get_spotify()
     search_type = preferred_type if preferred_type in ("track", "album", "artist", "playlist") else "track"
-    results = _api_call(sp.search, q=query, type=search_type, limit=_state.effective_limit, market=_state.effective_market)
+    results = _api_call(
+        sp.search, q=query, type=search_type, limit=_state.effective_limit, market=_state.effective_market
+    )
     key = f"{search_type}s"
     items = results.get(key, {}).get("items", []) if results else []
     if not items:
@@ -576,6 +700,7 @@ def _resolve_resources(
 # Artist name helper
 # ---------------------------------------------------------------------------
 
+
 def _artist_names(item: dict[str, Any]) -> str:
     """Return comma-joined artist names from a track/album item."""
     artists = item.get("artists", [])
@@ -585,6 +710,7 @@ def _artist_names(item: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 # Device selection
 # ---------------------------------------------------------------------------
+
 
 def _select_device(sp: spotipy.Spotify) -> str | None:
     """Select a device ID following the priority chain. Returns None if none found."""
@@ -649,6 +775,7 @@ def _require_device(sp: spotipy.Spotify) -> str:
 # ---------------------------------------------------------------------------
 # Output helpers
 # ---------------------------------------------------------------------------
+
 
 def _json_out(command: str, data: Any, ok: bool = True) -> None:
     """Print JSON envelope to stdout."""
@@ -724,6 +851,7 @@ def _spotify_url(resource_type: str, resource_id: str) -> str:
 # Confirmation helper
 # ---------------------------------------------------------------------------
 
+
 def _confirm(message: str) -> bool:
     """Ask for confirmation unless --yes is set."""
     if _state.auto_yes:
@@ -774,6 +902,7 @@ app.add_typer(mood_app, rich_help_panel="Discovery")
 # Shared output/debug options — applied at root and on every sub-app callback
 # so that --json/--plain/--debug work in any position and appear in --help.
 # ---------------------------------------------------------------------------
+
 
 def _apply_output_flags(
     json_out: bool = False,
@@ -920,6 +1049,7 @@ def _mood_cb(
 # Version callback
 # ---------------------------------------------------------------------------
 
+
 def _version_callback(value: bool) -> None:
     if value:
         print(f"spopy {__version__}")
@@ -930,9 +1060,12 @@ def _version_callback(value: bool) -> None:
 # Global callback (options applied to every command)
 # ---------------------------------------------------------------------------
 
+
 @app.callback()
 def _global_options(
-    version: bool = typer.Option(False, "--version", "-V", help="Show version and exit.", callback=_version_callback, is_eager=True),
+    version: bool = typer.Option(
+        False, "--version", "-V", help="Show version and exit.", callback=_version_callback, is_eager=True
+    ),
     json_out: bool = typer.Option(False, "--json", help="Output as JSON."),
     plain: bool = typer.Option(False, "--plain", help="Output as plain text."),
     debug: bool = typer.Option(False, "--debug", "--verbose", help="Enable debug logging."),
@@ -971,6 +1104,7 @@ def _global_options(
 # ===========================================================================
 # AUTH COMMANDS
 # ===========================================================================
+
 
 @auth_app.command("setup-guide")
 def auth_setup_guide() -> None:
@@ -1045,7 +1179,11 @@ def auth_status() -> None:
         table.add_column("Value")
         table.add_row("Auth Flow", "[cyan]PKCE[/] (zero-config)" if _state.uses_pkce else "[cyan]OAuth[/] (custom app)")
         table.add_row("Client ID", _mask_token(_state.client_id, 4) if _state.client_id else "[red]NOT SET[/]")
-        secret_display = "[dim]not needed (PKCE)[/]" if _state.uses_pkce else ("[green]set[/]" if _state.client_secret else "[red]NOT SET[/]")
+        secret_display = (
+            "[dim]not needed (PKCE)[/]"
+            if _state.uses_pkce
+            else ("[green]set[/]" if _state.client_secret else "[red]NOT SET[/]")
+        )
         table.add_row("Client Secret", secret_display)
         table.add_row("Redirect URI", _state.redirect_uri or "[red]NOT SET[/]")
         table.add_row("Cache Path", str(cache_path))
@@ -1096,6 +1234,7 @@ def auth_url(
 ) -> None:
     """Generate and print the authorization URL."""
     import secrets
+
     oauth = _build_auth_manager(open_browser=False)
     state_val = secrets.token_urlsafe(16)
     url = oauth.get_authorize_url(state=state_val)
@@ -1106,12 +1245,15 @@ def auth_url(
         logger.debug("State saved to %s", _state.state_file)
 
     if json_out or _state.flag_json:
-        _json_out("auth url", {
-            "url": url,
-            "scopes": _state.scopes,
-            "redirect_uri": _state.redirect_uri,
-            "state": state_val,
-        })
+        _json_out(
+            "auth url",
+            {
+                "url": url,
+                "scopes": _state.scopes,
+                "redirect_uri": _state.redirect_uri,
+                "state": state_val,
+            },
+        )
     else:
         _out.print("[bold]Authorization URL:[/]\n")
         print(url)
@@ -1140,7 +1282,7 @@ def auth_login(
     _save_pkce_state(oauth, "")
 
     if should_open:
-        _out.print(f"[bold]Opening browser for authorization…[/]")
+        _out.print("[bold]Opening browser for authorization…[/]")
         _out.print(f"[dim]URL: {url}[/]")
         try:
             webbrowser.open(url)
@@ -1290,7 +1432,7 @@ def auth_import_token_info(
         _die(f"Missing required fields: {', '.join(missing)}", ExitCode.INVALID_INPUT)
 
     _write_cache(token_info)
-    _out.print(f"[bold green]Token info imported.[/]")
+    _out.print("[bold green]Token info imported.[/]")
     _out.print(f"  Access token:  {_mask_token(token_info.get('access_token'))}")
     _out.print(f"  Refresh token: {_mask_token(token_info.get('refresh_token'))}")
     _out.print(f"  Saved to:      {_state.cache_path}")
@@ -1382,6 +1524,7 @@ def auth_logout(
 # DOCTOR
 # ===========================================================================
 
+
 @app.command("doctor", rich_help_panel="Setup & Diagnostics")
 def doctor() -> None:
     """Diagnose auth, config, connectivity, and playback readiness."""
@@ -1390,13 +1533,23 @@ def doctor() -> None:
     # 1. Auth flow and env vars
     flow = "PKCE (zero-config)" if _state.uses_pkce else "OAuth (custom app)"
     checks.append(("Auth flow", "[green]OK[/]", flow))
-    checks.append(("Client ID", "[green]OK[/]", _mask_token(_state.client_id, 4) if _state.client_id else "[red]MISSING[/]"))
+    checks.append(
+        ("Client ID", "[green]OK[/]", _mask_token(_state.client_id, 4) if _state.client_id else "[red]MISSING[/]")
+    )
     if _state.uses_pkce:
         checks.append(("Client Secret", "[green]OK[/]", "Not needed (PKCE)"))
     else:
         val = os.environ.get("SPOTIFY_CLIENT_SECRET", "")
-        checks.append(("Client Secret", "[green]OK[/]" if val else "[red]MISSING[/]", "Set" if val else "Export SPOTIFY_CLIENT_SECRET"))
-    checks.append(("Redirect URI", "[green]OK[/]" if _state.redirect_uri else "[red]MISSING[/]", _state.redirect_uri or "Not set"))
+        checks.append(
+            (
+                "Client Secret",
+                "[green]OK[/]" if val else "[red]MISSING[/]",
+                "Set" if val else "Export SPOTIFY_CLIENT_SECRET",
+            )
+        )
+    checks.append(
+        ("Redirect URI", "[green]OK[/]" if _state.redirect_uri else "[red]MISSING[/]", _state.redirect_uri or "Not set")
+    )
 
     # 2. Cache path
     cp = Path(_state.cache_path)
@@ -1482,7 +1635,7 @@ def doctor() -> None:
             print(f"{label}\t{detail}")
 
     def _data() -> list[dict[str, str]]:
-        return [{"check": l, "detail": d} for l, _, d in checks]
+        return [{"check": label, "detail": d} for label, _, d in checks]
 
     _print_output("doctor", rich_fn=_rich, plain_fn=_plain, data_fn=_data)
 
@@ -1490,6 +1643,7 @@ def doctor() -> None:
 # ===========================================================================
 # STATUS / CURRENT
 # ===========================================================================
+
 
 @app.command("status", rich_help_panel="Now Playing")
 def status_cmd() -> None:
@@ -1535,12 +1689,18 @@ def status_cmd() -> None:
             title += f"  ({info['album']})"
         bar = f"{info['progress']} / {info['duration']}"
         body = f"{state_icon}  {bar}\n"
-        body += f"Device: {info['device']}  |  Volume: {info['volume']}%  |  Shuffle: {'on' if info['shuffle'] else 'off'}  |  Repeat: {info['repeat']}"
+        shuffle = "on" if info["shuffle"] else "off"
+        body += (
+            f"Device: {info['device']}  |  Volume: {info['volume']}%"
+            f"  |  Shuffle: {shuffle}  |  Repeat: {info['repeat']}"
+        )
         _out.print(Panel(body, title=title, border_style="green" if is_playing else "yellow"))
 
     def _plain() -> None:
         status_str = "playing" if is_playing else "paused"
-        print(f"{info['name']}\t{info['artists']}\t{info['album']}\t{status_str}\t{info['progress']}/{info['duration']}\t{info['device']}")
+        print(
+            f"{info['name']}\t{info['artists']}\t{info['album']}\t{status_str}\t{info['progress']}/{info['duration']}\t{info['device']}"
+        )
 
     _print_output("status", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: info)
 
@@ -1604,6 +1764,7 @@ app.command("now", hidden=True)(current_cmd)
 # DEVICES
 # ===========================================================================
 
+
 @devices_app.command("list")
 def devices_list() -> None:
     """List available Spotify Connect devices."""
@@ -1641,7 +1802,14 @@ def devices_list() -> None:
     def _plain() -> None:
         for d in devices:
             active = "*" if d.get("is_active") else ""
-            print(f"{d.get('name', '?')}\t{d.get('id', '?')}\t{d.get('type', '?')}\t{active}\t{d.get('volume_percent', '?')}")
+            parts = [
+                d.get("name", "?"),
+                d.get("id", "?"),
+                d.get("type", "?"),
+                active,
+                str(d.get("volume_percent", "?")),
+            ]
+            print("\t".join(parts))
 
     _print_output("devices list", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: devices)
 
@@ -1668,6 +1836,7 @@ def devices_transfer(
 # ===========================================================================
 # PLAYBACK CONTROL
 # ===========================================================================
+
 
 @app.command("play", rich_help_panel="Playback")
 def play_cmd(
@@ -1826,6 +1995,7 @@ def shuffle_cmd(
 # QUEUE
 # ===========================================================================
 
+
 @queue_app.command("list")
 def queue_list() -> None:
     """Show the current playback queue."""
@@ -1907,10 +2077,13 @@ queue_app.command("rm", hidden=True)(queue_remove)
 # SEARCH
 # ===========================================================================
 
+
 @app.command("search", rich_help_panel="Browse & Search")
 def search_cmd(
     query: str = typer.Argument(..., help="Search query."),
-    type_filter: str = typer.Option("track", "--type", "-t", help="Result types: track, album, artist, playlist (comma-separated)."),
+    type_filter: str = typer.Option(
+        "track", "--type", "-t", help="Result types: track, album, artist, playlist (comma-separated)."
+    ),
 ) -> None:
     """Search Spotify."""
     sp = _get_spotify()
@@ -1945,7 +2118,9 @@ def search_cmd(
             table.add_column("URI", style="dim")
             for item in items:
                 if rtype == "track":
-                    table.add_row(item.get("name"), _artist_names(item), item.get("album", {}).get("name", ""), item.get("uri"))
+                    table.add_row(
+                        item.get("name"), _artist_names(item), item.get("album", {}).get("name", ""), item.get("uri")
+                    )
                 elif rtype == "album":
                     year = (item.get("release_date") or "")[:4]
                     table.add_row(item.get("name"), _artist_names(item), year, item.get("uri"))
@@ -1970,6 +2145,7 @@ def search_cmd(
 # ===========================================================================
 # TRACK COMMANDS
 # ===========================================================================
+
 
 @track_app.command("show")
 def track_show(query: str = typer.Argument(..., help="Track URI, URL, ID, or search.")) -> None:
@@ -2083,9 +2259,21 @@ def track_audio(query: str = typer.Argument(..., help="Track for audio features.
                 table = Table(title="Audio Features", show_lines=True)
                 table.add_column("Feature", style="bold")
                 table.add_column("Value")
-                for k in ("danceability", "energy", "key", "loudness", "mode", "speechiness",
-                           "acousticness", "instrumentalness", "liveness", "valence", "tempo",
-                           "duration_ms", "time_signature"):
+                for k in (
+                    "danceability",
+                    "energy",
+                    "key",
+                    "loudness",
+                    "mode",
+                    "speechiness",
+                    "acousticness",
+                    "instrumentalness",
+                    "liveness",
+                    "valence",
+                    "tempo",
+                    "duration_ms",
+                    "time_signature",
+                ):
                     table.add_row(k, str(feat.get(k, "—")))
                 _out.print(table)
         else:
@@ -2100,6 +2288,7 @@ def track_audio(query: str = typer.Argument(..., help="Track for audio features.
 # ===========================================================================
 # ALBUM COMMANDS
 # ===========================================================================
+
 
 @album_app.command("show")
 def album_show(query: str = typer.Argument(..., help="Album URI, URL, ID, or search.")) -> None:
@@ -2220,6 +2409,7 @@ def album_check(query: str = typer.Argument(..., help="Album to check.")) -> Non
 # ARTIST COMMANDS
 # ===========================================================================
 
+
 @artist_app.command("show")
 def artist_show(query: str = typer.Argument(..., help="Artist URI, URL, ID, or search.")) -> None:
     """Show artist details."""
@@ -2317,7 +2507,9 @@ def artist_albums(query: str = typer.Argument(..., help="Artist name or URI.")) 
 
     def _plain() -> None:
         for a in albums:
-            print(f"{a.get('name', '?')}\t{a.get('album_type', '')}\t{(a.get('release_date') or '')[:4]}\t{a.get('uri', '')}")
+            year = (a.get("release_date") or "")[:4]
+            parts = [a.get("name", "?"), a.get("album_type", ""), year, a.get("uri", "")]
+            print("\t".join(parts))
 
     _print_output("artist albums", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: albums)
 
@@ -2369,13 +2561,16 @@ def artist_related(query: str = typer.Argument(..., help="Artist name or URI."))
     except SystemExit:
         raise
     except Exception:
-        _out.print("[yellow]Related artists endpoint is restricted to apps with extended API access (since Nov 2024).[/]")
+        _out.print(
+            "[yellow]Related artists endpoint is restricted to apps with extended API access (since Nov 2024).[/]"
+        )
         _out.print("[dim]This endpoint is not available to new applications.[/]")
 
 
 # ===========================================================================
 # PLAYLIST COMMANDS
 # ===========================================================================
+
 
 @playlist_app.command("list")
 def playlist_list(
@@ -2480,7 +2675,9 @@ def playlist_create(
     user_id = me.get("id") if me else None
     if not user_id:
         _die("Could not determine user ID.", ExitCode.AUTH_CONFIG_ERROR)
-    result = _api_call(sp.user_playlist_create, user_id, name, public=public, collaborative=collaborative, description=description)
+    result = _api_call(
+        sp.user_playlist_create, user_id, name, public=public, collaborative=collaborative, description=description
+    )
     if _state.effective_output == OutputMode.JSON:
         _json_out("playlist create", result)
     else:
@@ -2556,7 +2753,13 @@ def playlist_items(
     """List items in a playlist."""
     sp = _get_spotify()
     resource = _resolve_resource(playlist, "playlist", sp)
-    result = _api_call(sp.playlist_items, resource.resource_id, limit=_state.effective_limit, offset=_state.effective_offset, market=_state.effective_market)
+    result = _api_call(
+        sp.playlist_items,
+        resource.resource_id,
+        limit=_state.effective_limit,
+        offset=_state.effective_offset,
+        market=_state.effective_market,
+    )
     items = result.get("items", []) if result else []
 
     def _rich() -> None:
@@ -2642,7 +2845,13 @@ def playlist_reorder(
     """Reorder items in a playlist."""
     sp = _get_spotify()
     pl_resource = _resolve_resource(playlist, "playlist", sp)
-    _api_call(sp.playlist_reorder_items, pl_resource.resource_id, range_start=range_start, insert_before=insert_before, range_length=length)
+    _api_call(
+        sp.playlist_reorder_items,
+        pl_resource.resource_id,
+        range_start=range_start,
+        insert_before=insert_before,
+        range_length=length,
+    )
     _out.print("[green]Playlist reordered.[/]")
 
 
@@ -2668,11 +2877,17 @@ def playlist_replace(
 # LIBRARY COMMANDS
 # ===========================================================================
 
+
 @library_app.command("tracks")
 def library_tracks() -> None:
     """List saved tracks."""
     sp = _get_spotify()
-    result = _api_call(sp.current_user_saved_tracks, limit=_state.effective_limit, offset=_state.effective_offset, market=_state.effective_market)
+    result = _api_call(
+        sp.current_user_saved_tracks,
+        limit=_state.effective_limit,
+        offset=_state.effective_offset,
+        market=_state.effective_market,
+    )
     items = result.get("items", []) if result else []
 
     def _rich() -> None:
@@ -2684,7 +2899,9 @@ def library_tracks() -> None:
         table.add_column("URI", style="dim")
         for i, it in enumerate(items, _state.effective_offset + 1):
             t = it.get("track") or {}
-            table.add_row(str(i), t.get("name", "?"), _artist_names(t), t.get("album", {}).get("name", ""), t.get("uri", ""))
+            table.add_row(
+                str(i), t.get("name", "?"), _artist_names(t), t.get("album", {}).get("name", ""), t.get("uri", "")
+            )
         _out.print(table)
 
     def _plain() -> None:
@@ -2699,7 +2916,12 @@ def library_tracks() -> None:
 def library_albums() -> None:
     """List saved albums."""
     sp = _get_spotify()
-    result = _api_call(sp.current_user_saved_albums, limit=_state.effective_limit, offset=_state.effective_offset, market=_state.effective_market)
+    result = _api_call(
+        sp.current_user_saved_albums,
+        limit=_state.effective_limit,
+        offset=_state.effective_offset,
+        market=_state.effective_market,
+    )
     items = result.get("items", []) if result else []
 
     def _rich() -> None:
@@ -2711,7 +2933,9 @@ def library_albums() -> None:
         table.add_column("URI", style="dim")
         for i, it in enumerate(items, _state.effective_offset + 1):
             a = it.get("album") or {}
-            table.add_row(str(i), a.get("name", "?"), _artist_names(a), (a.get("release_date") or "")[:4], a.get("uri", ""))
+            table.add_row(
+                str(i), a.get("name", "?"), _artist_names(a), (a.get("release_date") or "")[:4], a.get("uri", "")
+            )
         _out.print(table)
 
     def _plain() -> None:
@@ -2767,6 +2991,7 @@ def library_unsave(query: str = typer.Argument(..., help="Track or album to unsa
 # RECENT / TOP
 # ===========================================================================
 
+
 @app.command("recent", rich_help_panel="Discovery")
 def recent_cmd() -> None:
     """Show recently played tracks."""
@@ -2799,7 +3024,9 @@ def top_tracks(
 ) -> None:
     """Show your top tracks."""
     sp = _get_spotify()
-    result = _api_call(sp.current_user_top_tracks, limit=_state.effective_limit, offset=_state.effective_offset, time_range=time_range)
+    result = _api_call(
+        sp.current_user_top_tracks, limit=_state.effective_limit, offset=_state.effective_offset, time_range=time_range
+    )
     items = result.get("items", []) if result else []
 
     def _rich() -> None:
@@ -2825,7 +3052,9 @@ def top_artists(
 ) -> None:
     """Show your top artists."""
     sp = _get_spotify()
-    result = _api_call(sp.current_user_top_artists, limit=_state.effective_limit, offset=_state.effective_offset, time_range=time_range)
+    result = _api_call(
+        sp.current_user_top_artists, limit=_state.effective_limit, offset=_state.effective_offset, time_range=time_range
+    )
     items = result.get("items", []) if result else []
 
     def _rich() -> None:
@@ -2848,6 +3077,7 @@ def top_artists(
 # ===========================================================================
 # GENRE / MOOD / DISCOVER / RADIO
 # ===========================================================================
+
 
 @genre_app.command("list")
 def genre_list() -> None:
@@ -2877,7 +3107,13 @@ def genre_search(genre: str = typer.Argument(..., help="Genre to search for.")) 
     sp = _get_spotify()
     results: dict[str, Any] = {}
     for stype in ("playlist", "artist", "track"):
-        r = _api_call(sp.search, q=f"genre:{genre}" if stype != "playlist" else genre, type=stype, limit=5, market=_state.effective_market)
+        r = _api_call(
+            sp.search,
+            q=f"genre:{genre}" if stype != "playlist" else genre,
+            type=stype,
+            limit=5,
+            market=_state.effective_market,
+        )
         items = r.get(f"{stype}s", {}).get("items", []) if r else []
         if items:
             results[stype] = items
@@ -2904,7 +3140,9 @@ def genre_search(genre: str = typer.Argument(..., help="Genre to search for.")) 
 
 
 @mood_app.command("search")
-def mood_search(mood: str = typer.Argument(..., help="Mood: chill, focus, happy, sad, workout, sleep, party, study.")) -> None:
+def mood_search(
+    mood: str = typer.Argument(..., help="Mood: chill, focus, happy, sad, workout, sleep, party, study."),
+) -> None:
     """Search by mood (heuristic — maps mood to playlist/track search queries)."""
     queries = MOOD_MAP.get(mood.lower(), [mood])
     sp = _get_spotify()
@@ -2918,7 +3156,7 @@ def mood_search(mood: str = typer.Argument(..., help="Mood: chill, focus, happy,
         _out.print(f"[yellow]No results for mood: {mood}[/]")
         return
 
-    _out.print(f"[dim]Note: Mood matching is heuristic. Results are search-based, not guaranteed Spotify metadata.[/]")
+    _out.print("[dim]Note: Mood matching is heuristic. Results are search-based, not guaranteed Spotify metadata.[/]")
 
     def _rich() -> None:
         table = Table(title=f"Mood: {mood}")
@@ -2975,7 +3213,9 @@ def discover_cmd() -> None:
         for t in fresh:
             print(f"discover\t{t.get('name', '?')}\t{_artist_names(t)}\t{t.get('uri', '')}")
 
-    _print_output("discover", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: {"top_tracks": tracks, "discovered": fresh})
+    _print_output(
+        "discover", rich_fn=_rich, plain_fn=_plain, data_fn=lambda: {"top_tracks": tracks, "discovered": fresh}
+    )
 
 
 @app.command("radio", rich_help_panel="Discovery")
@@ -3024,6 +3264,7 @@ def radio_cmd(
 # MAIN
 # ===========================================================================
 
+
 def _reorder_argv() -> None:
     """Hoist global options to the front of sys.argv.
 
@@ -3034,11 +3275,23 @@ def _reorder_argv() -> None:
     position.
     """
     global_flags = {
-        "--json", "--plain", "--debug", "--verbose", "--no-color",
-        "--yes", "-y", "--exact", "--interactive", "-i",
+        "--json",
+        "--plain",
+        "--debug",
+        "--verbose",
+        "--no-color",
+        "--yes",
+        "-y",
+        "--exact",
+        "--interactive",
+        "-i",
     }
     global_value_opts = {
-        "--device-id", "--device-name", "--market", "--limit", "--offset",
+        "--device-id",
+        "--device-name",
+        "--market",
+        "--limit",
+        "--offset",
     }
 
     argv = sys.argv[1:]
