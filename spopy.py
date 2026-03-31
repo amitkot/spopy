@@ -609,6 +609,14 @@ def _select_device(sp: spotipy.Spotify) -> str | None:
     if _state.default_device_name:
         return _resolve_device_by_name(sp, _state.default_device_name)
 
+    # Auto-select if exactly one device is available
+    devs = _api_call(sp.devices)
+    devices = devs.get("devices", []) if devs else []
+    if len(devices) == 1:
+        dev_id = devices[0]["id"]
+        logger.debug("Auto-selected sole available device: %s (%s)", devices[0].get("name"), dev_id)
+        return dev_id
+
     return None
 
 
