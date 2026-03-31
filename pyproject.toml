@@ -42,3 +42,26 @@ only-include = ["spopy.py"]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["spopy.py", "README.md", "LICENSE", "CHANGELOG.md", "pyproject.toml"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E402",  # module-level import after warnings.filterwarnings
+]
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.rules]
+invalid-assignment = "ignore"   # SpotifyPKCE._code_verifier private attr access
+unresolved-attribute = "ignore" # SpotifyPKCE._code_verifier private attr access
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.8",
+    "ty>=0.0.26",
+]
