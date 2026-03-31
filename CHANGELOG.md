@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-31
+
+### Added
+
+- Auto-select sole available Spotify Connect device when no active device or default is configured
+- Global CLI options (`--json`, `--device-id`, etc.) now work in any position (e.g. `spopy devices list --json`)
+
+### Changed
+
+- Trimmed SKILL.md to essentials — agents discover full commands via `--help`
+- Device selection priority chain extended: flag > flag name > active > env default > sole available device
+
 ## [0.2.0] - 2026-03-30
 
 ### Added

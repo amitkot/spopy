@@ -48,7 +48,7 @@ from spotipy.oauth2 import SpotifyOAuth, SpotifyPKCE
 # ---------------------------------------------------------------------------
 
 APP_NAME = "spopy"
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 DEFAULT_SCOPES = " ".join([
     "user-read-playback-state",
